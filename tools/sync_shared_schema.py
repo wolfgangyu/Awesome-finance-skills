@@ -59,6 +59,16 @@ def sync_skill(skill_name: str) -> Path:
     )
 
     shim_path.parent.mkdir(parents=True, exist_ok=True)
+    # shim 目錄 (skills/<skill>/scripts/schema/) 是 package，需有 __init__.py 才可讓
+    # `from scripts.schema.models import InvestmentSignal` 通過。
+    shim_pkg = shim_path.parent
+    init_path = shim_pkg / "__init__.py"
+    if not init_path.exists():
+        init_path.write_text(
+            "# DEPRECATED: 請改用 `from scripts.alphaear_schema import ...`。\n",
+            encoding="utf-8",
+        )
+
     shim_path.write_text(
         "# DEPRECATED: 請改用 `from scripts.alphaear_schema import InvestmentSignal`。\n"
         "from scripts.alphaear_schema.models import *  # noqa: F401,F403\n",
@@ -74,15 +84,24 @@ def cmd_check() -> int:
         print("ERROR: skills/_shared/alphaear_schema/__init__.py 缺 __version__")
         return 1
 
+    # 三個樣板檔案都要 byte-for-byte 等於 source-of-truth。
+    tracked_files = ("models.py", "isq_template.py", "__init__.py")
+
     for skill in SKILLS:
         vendor = REPO_ROOT / "skills" / skill / "scripts" / "alphaear_schema"
         if not vendor.exists():
             print(f"ERROR: {vendor} 不存在")
             return 1
-        stamp = REPO_ROOT / skill / "scripts" / "alphaear_schema" / "__vendored__.py" if False else vendor / "__vendored__.py"
+        for fname in tracked_files:
+            shared_bytes = (SHARED_SRC / fname).read_bytes()
+            vendor_bytes = (vendor / fname).read_bytes()
+            if shared_bytes != vendor_bytes:
+                print(f"ERROR: {vendor}/{fname} 已漂移 (需重跑 sync)")
+                return 1
+        stamp = vendor / "__vendored__.py"
         vendor_version = _read_version(stamp)
         if vendor_version != shared_version:
-            print(f"ERROR: {vendor} 版本 {vendor_version} != 共用版 {shared_version}")
+            print(f"ERROR: {vendor}/__vendored__.py 版本 {vendor_version} != 共用版 {shared_version}")
             return 1
         shim = REPO_ROOT / "skills" / skill / "scripts" / "schema" / "models.py"
         if not shim.exists():

@@ -41,6 +41,12 @@ print(forecast)
 
 This skill requires the **Kronos** model and an embedding model.
 
+### Shared Schema
+
+本 skill 內含 vendored 版的 `alphaear_schema`（single source of truth 在 `skills/_shared/alphaear_schema/`）。修改 schema 必須在 `_shared/` 內編輯後跑 `python tools/sync_shared_schema.py`。
+
+> 版本戳記: `skills/alphaear-predictor/scripts/alphaear_schema/__vendored__.py`
+
 1.  **Kronos Model**:
     -   Ensure `exports/models` directory exists in the project root.
     -   Place trained news projector weights (e.g., `kronos_news_v1.pt`) in `exports/models/`.

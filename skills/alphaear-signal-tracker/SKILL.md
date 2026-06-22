@@ -9,6 +9,12 @@ description: Track finance investment signal evolution and update logic based on
 
 This skill provides logic to track and update investment signals. It assesses how new market information impacts existing signals (Strengthened, Weakened, Falsified, or Unchanged).
 
+### Shared Schema
+
+本 skill 內含 vendored 版的 `alphaear_schema`（single source of truth 在 `skills/_shared/alphaear_schema/`）。修改 schema 必須在 `_shared/` 內編輯後跑 `python tools/sync_shared_schema.py`。
+
+> 版本戳記: `skills/alphaear-signal-tracker/scripts/alphaear_schema/__vendored__.py`
+
 ## Capabilities
 
 ### 1. Track Signal Evolution

@@ -9,6 +9,12 @@ description: Plan, write, and edit professional financial reports; generate fina
 
 This skill provides a structured workflow for generating professional financial reports. It includes planning, writing, editing, and creating visual aids (charts).
 
+### Shared Schema
+
+本 skill 內含 vendored 版的 `alphaear_schema`（single source of truth 在 `skills/_shared/alphaear_schema/`）。修改 schema 必須在 `_shared/` 內編輯後跑 `python tools/sync_shared_schema.py`。
+
+> 版本戳記: `skills/alphaear-reporter/scripts/alphaear_schema/__vendored__.py`
+
 ## Capabilities
 
 ## Capabilities
