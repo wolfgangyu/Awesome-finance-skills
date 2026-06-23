@@ -2,8 +2,8 @@ import sys
 import os
 import unittest
 
-# Add skill root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add skill root to path so that `import scripts.*` resolves.
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'skills', 'alphaear-stock')))
 
 try:
     from scripts.stock_tools import StockTools
@@ -16,7 +16,7 @@ class TestStock(unittest.TestCase):
     def test_init(self):
         print("Testing StockTools Iteration...")
         db = DatabaseManager(":memory:")
-        tools = StockTools(db)
+        tools = StockTools(db, auto_update=False)
         self.assertIsNotNone(tools)
         print("StockTools Initialized.")
 
