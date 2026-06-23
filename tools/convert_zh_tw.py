@@ -1,0 +1,209 @@
+"""簡體中文 → 繁體中文（台灣）轉換工具。
+
+設計原則：
+  1. 只針對 markdown、docstring、log/print/error 等**人類可讀**字串。
+  2. 程式碼識別（identifier、URL、檔名、import 名）絕對不能動。
+  3. 用 dict-of-str 對照表 + regex。
+  4. 標點符號的中英之間保留半形空白（依 CLAUDE.md 全域排版規則）。
+
+詞彙對照表依據 `docs/superpowers/specs/2026-06-22-alphaear-schema-market-refactor-design.md` §5.3。
+"""
+from __future__ import annotations
+
+import argparse
+import re
+from pathlib import Path
+from typing import Iterable
+
+# === 詞彙對照（spec §5.3）===
+# 注意：順序敏感（長的在前，避免短詞覆蓋）。
+mapping: list[tuple[str, str]] = [
+    # 金融／交易術語
+    ("股票代码", "股票代號"),
+    ("代码", "代號"),
+    ("股票", "股市"),
+    ("重新获取", "重新取得"),
+    ("信号", "訊號"),
+    ("证券", "證券"),
+    ("涨跌幅", "漲跌幅"),
+    ("涨幅", "漲幅"),
+    ("跌幅", "跌幅"),  # 已是繁中，無須替換
+    ("涨跌额", "漲跌額"),
+    ("换手率", "換手率"),
+    ("成交额", "成交額"),
+    ("成交量", "成交量"),  # 已是繁中
+    ("开盘", "開盤"),
+    ("收盘", "收盤"),
+    ("振幅", "振幅"),  # 已是繁中
+    ("市场", "市場"),
+    ("行业", "行業"),
+    ("总市值", "總市值"),
+    ("市盈率", "本益比"),
+    ("技术", "技術"),
+    ("获取", "取得"),
+    ("请求", "請求"),
+    ("交易", "交易"),  # 已是繁中
+    ("失败", "失敗"),
+    ("成功", "成功"),  # 已是繁中
+    ("加载", "載入"),
+    ("下载", "下載"),
+    ("上传", "上傳"),
+    ("调用", "呼叫"),
+    ("响应", "回應"),
+    ("支持", "支援"),
+    ("默认", "預設"),
+    ("更新", "更新"),  # 已是繁中
+    ("简介", "簡介"),
+    ("描述", "描述"),  # 已是繁中
+    ("搜索", "搜尋"),
+    ("标签", "標籤"),
+    ("列表", "列表"),  # 已是繁中
+    ("用户", "使用者"),
+    ("插件", "外掛"),
+    ("参数", "參數"),
+    ("后台", "後台"),
+    ("异常", "例外"),
+    ("错误", "錯誤"),
+    ("警告", "警告"),  # 已是繁中
+    ("注释", "註解"),
+    ("返回", "回傳"),
+
+    # 網路 / 系統
+    ("记忆", "記憶體"),
+    ("缓存", "快取"),
+    ("网络", "網路"),
+    ("本地", "本機"),
+    ("软件", "軟體"),
+    ("硬件", "硬體"),
+    ("消息", "訊息"),
+    ("频带宽", "頻寬"),
+    ("频道", "頻道"),
+    ("频率", "頻率"),
+
+    # 文件/排版
+    ("类", "類別"),
+    ("对象", "物件"),
+    ("数组", "陣列"),
+    ("字符", "字元"),
+    ("字符串", "字串"),
+    ("指针", "指標"),
+    ("函数", "函式"),
+    ("方法", "方法"),  # 已是繁中
+    ("变量", "變數"),
+    ("常量", "常數"),
+    ("循环", "迴圈"),
+    ("模块", "模組"),
+    ("包", "套件"),
+    ("导出", "匯出"),
+    ("导入", "匯入"),
+    ("异步", "非同步"),
+    ("并发", "並行"),
+    ("线程", "執行緒"),
+    ("进程", "處理程序"),
+
+    # 動作
+    ("设置", "設定"),
+    ("删除", "刪除"),
+    ("查找", "尋找"),
+    ("注意", "注意"),  # 已是繁中
+    ("语言", "語言"),
+    ("时间", "時間"),
+    ("认证", "認證"),
+    ("授权", "授權"),
+    ("密码", "密碼"),
+]
+
+# 編譯為 regex（一次比對）。
+_PATTERN = re.compile("|".join(re.escape(src) for src, _ in mapping))
+
+
+def _longest_first() -> list[tuple[str, str]]:
+    """回傳按長度由長到短的對照，保留原 mapping 的次序細節。"""
+    return sorted(mapping, key=lambda kv: -len(kv[0]))
+
+
+_LONGEST_FIRST = _longest_first()
+
+
+def is_simplified(text: str) -> bool:
+    """判斷是否含有**已知**的簡體詞（spec §5.3）。
+
+    不做完整 OpenCC 級別的判斷；只檢查常見的簡體詞是否出現。
+    """
+    for src, _ in mapping:
+        if src in text:
+            return True
+    return False
+
+
+def convert_text(text: str) -> str:
+    """把一段字串中的簡體片語轉為繁中。
+
+    不變更非中文、英語、數字、標點。
+    """
+    if not is_simplified(text):
+        return text
+    # 必須 longest first 才不會被短的先吃
+    pattern = re.compile("|".join(re.escape(src) for src, _ in _LONGEST_FIRST))
+    lookup = dict(_LONGEST_FIRST)
+    return pattern.sub(lambda m: lookup[m.group(0)], text)
+
+
+def _should_skip_file(path: Path) -> bool:
+    """決定一個檔案是否該被略過（binary、build、git 目錄等）。"""
+    parts = path.parts
+    if any(p in (".git", "venv", "__pycache__", "node_modules", "dist", "build") for p in parts):
+        return True
+    if path.suffix in (".pyc", ".so", ".dll", ".exe", ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".zip", ".pt"):
+        return True
+    return False
+
+
+def iter_target_files(roots: Iterable[Path]) -> Iterable[Path]:
+    """回傳需要轉換的檔案（markdown、py、yaml、md）。"""
+    for root in roots:
+        if root.is_file():
+            yield root
+            continue
+        for p in root.rglob("*"):
+            if not p.is_file():
+                continue
+            if _should_skip_file(p):
+                continue
+            if p.suffix in (".md", ".yaml", ".yml", ".py"):
+                yield p
+
+
+def convert_file(path: Path) -> bool:
+    """轉換單一檔案並存回。回傳 True 表示有修改。"""
+    text = path.read_text(encoding="utf-8")
+    new_text = convert_text(text)
+    if new_text != text:
+        path.write_text(new_text, encoding="utf-8")
+        return True
+    return False
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="簡轉繁（zh-TW）")
+    parser.add_argument("paths", nargs="+", type=Path, help="要掃描的根目錄或檔案")
+    parser.add_argument("--dry-run", action="store_true", help="僅列出會動的檔案，不修改")
+    args = parser.parse_args()
+
+    modified = 0
+    for path in iter_target_files(args.paths):
+        text = path.read_text(encoding="utf-8")
+        new_text = convert_text(text)
+        if new_text != text:
+            modified += 1
+            if args.dry_run:
+                print(f"would convert: {path}")
+            else:
+                path.write_text(new_text, encoding="utf-8")
+                print(f"converted:     {path}")
+    print(f"\nTotal modifications: {modified}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
