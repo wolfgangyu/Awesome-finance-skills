@@ -78,7 +78,7 @@ cat skills/alphaear-news/references/sources.md
 | Skill | 角色 | 關鍵 entry | 對外依賴 |
 |:------|:-----|:-----------|:---------|
 | **alphaear-news** | 多源熱點新聞聚合 + Polymarket 預測市場 | `scripts/news_tools.py::NewsNowTools` | NewsNow API (`https://newsnow.busiyi.world/api/s?id=<id>`)、Jina 內容萃取、Polymarket |
-| **alphaear-stock** | A 股 / 港股 / 美股代碼搜尋與歷史 OHLCV | `scripts/stock_tools.py::StockTools`（內含 `EastMoneyDirect` 降級方案） | akshare、yfinance、EastMoney HTTP |
+| **alphaear-stock** | 台股（TWSE/TPEx）/ 美股代碼搜尋與歷史 OHLCV | `scripts/stock_tools.py::StockTools`（內含 `TWSEClient` 從 `scripts/twse_client.py` 提供 TWSE/TPEx fallback） | yfinance、requests、pandas |
 | **alphaear-sentiment** | FinBERT / LLM 情緒分析（-1.0 ~ +1.0） | `scripts/sentiment_tools.py::SentimentTools` | FinBERT、LLM（Gemini/Anthropic/OpenAI router 在 `scripts/llm/`） |
 | **alphaear-search** | Web 搜尋（Jina / DDG / Baidu）+ 本地 RAG | `scripts/search_tools.py::SearchTools` | duckduckgo-search、requests、`hybrid_search.py`（搜 `daily_news` 表） |
 | **alphaear-deepear-lite** | 從 `deepear.vercel.app/latest.json` 拉最新訊號 | `scripts/deepear_lite.py::DeepEarLiteTools` | 純 HTTP，無 DB |
@@ -101,7 +101,7 @@ cat skills/alphaear-news/references/sources.md
 
 ## 測試與驗證
 
-`tests/<skill>/` 目錄是各 skill 的 smoke test，目前只驗證 import / class 初始化（預期 LLM / 模型沒到位時會 fail-soft）。重 model 與重網路（`alphaear-predictor` 載 Kronos、`alphaear-stock` 連 akshare/yfinance）我這邊環境通常不會跑通，因此：
+`tests/<skill>/` 目錄是各 skill 的 smoke test，目前只驗證 import / class 初始化（預期 LLM / 模型沒到位時會 fail-soft）。重 model 與重網路（`alphaear-predictor` 載 Kronos、`alphaear-stock` 連 yfinance/TWSE/TPEx）我這邊環境通常不會跑通，因此：
 - 修改 schema 或 contracts 時，跑對應的 `tests/<skill>/test_*.py` 看 import 階段有沒有炸。
 - 需要實際連網/重 model 的功能改動，建議 staging 環境或人工驗證；不要宣稱「通過」。
 
