@@ -110,3 +110,28 @@ cat skills/alphaear-news/references/sources.md
 - SKILL.md body 重複標題（例如 `alphaear-predictor` 有兩個 `### 1. Forecast Market Trends`）— 新增能力章節時檢查是否已存在。
 - SKILL.md 範例程式和實際 import path 不完全一致時，優先信實際檔案位置（看 `ls <skill>/scripts/`）。
 - `signal-tracker` 目前 SKILL 直說「目前是從 FinAgent 抽出來的 pattern，未來重構為 standalone」，修改前先看 `scripts/fin_agent.py::track_signal` 實作。
+
+## v1.1.0 釋版摘要（schema 重抽 + 市場重構 + zh-TW）
+
+**Phase 1 — Schema 抽離**
+
+- 三個共用 schema 的 skill（predictor / reporter / signal-tracker）把 `InvestmentSignal` 等 Pydantic 模型集中到 `skills/_shared/alphaear_schema/`。
+- `tools/sync_shared_schema.py` 把 _shared 同步到各 skill 的 vendored 子模組；`scripts/schema/models.py` 保留薄 shim 供舊 import path 用。
+- `scripts.alphaear_schema.models.InvestmentSignal` 與 `scripts.schema.models.InvestmentSignal` 是**同一個 class**，v1.1.0 → v1.2.0 期間兩路徑都可走；v1.2.0 將拆 shim。
+- v1.2.0 migration deadline：commit message 需明確標 `BREAKING CHANGE`。
+
+**Phase 2 — Market Refactor**
+
+- `alphaear-stock` 移除 `akshare` 與 `EastMoneyDirect`（A 股 / 港股支援）。
+- 新增 `skills/alphaear-stock/scripts/twse_client.py`：TWSE 上市 + TPEx 上櫃官方 HTTP，4 位數字代號先試 TWSE、空時 fallback TPEx。
+- 美股仍走 `yfinance`。
+- 台股基本面（`get_stock_fundamentals`）目前回空 dict，後續 PR 計畫整合 Timeverse/My-TW-Coverage（1,735 家台股研究資料）作為 fallback 來源。
+- Skill description 與 SKILL.md 文件已更新。
+
+**Phase 3 — zh-TW 轉換**
+
+- 全 repo 對應到 `tools/convert_zh_tw.py` + `tools/check_zh_tw.py`：
+  - `convert_zh_tw.py [paths] [--include-py]`：轉簡體 → 繁體（台灣用語）。
+  - `check_zh_tw.py [paths] [--include-py]`：掃描剩餘簡體；exit 1 = 有殘留。
+- 注意：`convert_zh_tw.py` 自身因為含大量 mapping，內部不可避免地帶有簡體字符（工具性內容），是預期行為。
+- README 與 SKILL.md 全部繁中。
