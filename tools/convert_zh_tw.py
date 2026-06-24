@@ -239,15 +239,16 @@ def _should_skip_file(path: Path) -> bool:
     return False
 
 
-def iter_target_files(roots: Iterable[Path]) -> Iterable[Path]:
+def iter_target_files(roots: Iterable[Path], *, include_py: bool = False) -> Iterable[Path]:
     """回傳需要轉換的檔案。
 
     為避免誤改程式碼（identifier、字串字面值），這個工具**只處理 .md**，
     除非使用者明確加 ``--include-py`` 旗標才擴張到程式碼 docstring。
     """
+    suffixes = (".md",) if not include_py else (".md", ".py")
     for root in roots:
         if root.is_file():
-            if root.suffix in (".md",):
+            if root.suffix in suffixes:
                 yield root
             continue
         for p in root.rglob("*"):
@@ -255,7 +256,7 @@ def iter_target_files(roots: Iterable[Path]) -> Iterable[Path]:
                 continue
             if _should_skip_file(p):
                 continue
-            if p.suffix in (".md",):
+            if p.suffix in suffixes:
                 yield p
 
 
@@ -273,11 +274,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="簡轉繁（zh-TW）")
     parser.add_argument("paths", nargs="+", type=Path, help="要掃描的根目錄或檔案")
     parser.add_argument("--dry-run", action="store_true", help="僅列出會動的檔案，不修改")
+    parser.add_argument("--include-py", action="store_true", help="包含 .py 檔案（docstrings/log/error 訊息）")
     args = parser.parse_args()
 
     modified = 0
     fixed_encoding = 0
-    for path in iter_target_files(args.paths):
+    for path in iter_target_files(args.paths, include_py=args.include_py):
         raw = path.read_bytes()
         # 先以 UTF-8 試讀；若失敗再嘗試 cp950 → gb2312
         original = None

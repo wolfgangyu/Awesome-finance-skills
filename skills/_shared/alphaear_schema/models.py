@@ -21,7 +21,7 @@ class IntentAnalysis(BaseModel):
 
 class FilterResult(BaseModel):
     """LLM 篩選結果 - 快速判斷是否有有效訊號"""
-    has_valid_signals: bool = Field(..., description="列表中是否包含有效的金融訊號")
+    has_valid_signals: bool = Field(..., description="列表中是否套件含有效的金融訊號")
     selected_ids: List[int] = Field(default_factory=list, description="篩選出的有效訊號 ID 列表")
     themes: List[str] = Field(default_factory=list, description="訊號涉及的主題")
     reason: Optional[str] = Field(default=None, description="如果無有效訊號，說明原因")
@@ -54,7 +54,7 @@ class InvestmentSignal(BaseModel):
     industry_tags: List[str] = Field(default_factory=list, description="關聯行業標籤")
 
     # 溯源
-    sources: List[Dict[str, str]] = Field(default_factory=list, description="來源詳情 (包含 title, url, source_name)")
+    sources: List[Dict[str, str]] = Field(default_factory=list, description="來源詳情 (套件含 title, url, source_name)")
 
 
 class ResearchContext(BaseModel):
@@ -78,7 +78,7 @@ class ScanContext(BaseModel):
 
 class SignalCluster(BaseModel):
     theme_title: str = Field(..., description="主題名稱")
-    signal_ids: List[int] = Field(..., description="包含的訊號 ID 列表")
+    signal_ids: List[int] = Field(..., description="套件含的訊號 ID 列表")
     rationale: str = Field(..., description="聚類理由")
 
 

@@ -109,7 +109,7 @@ def test_deprecation_shim_still_works():
 
         from scripts.schema.models import InvestmentSignal as ShimInvest  # type: ignore  # noqa: E402
 
-        # * 為 wildcard re-export。shim 文件：
+        # * 為 wildcard re-export。shim 檔案：
         #     from scripts.alphaear_schema.models import *  # noqa
         # 因此 ShimInvest 應該是 alphaear_schema.models 的同一 class。為了
         # 證明「共用基底」正確，我們另從 _shared 載入原檔驗證三者一致：

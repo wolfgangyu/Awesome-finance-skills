@@ -20,11 +20,12 @@ from convert_zh_tw import is_simplified, has_encoding_problem, iter_target_files
 def main() -> int:
     parser = argparse.ArgumentParser(description="檢查簡體中文殘餘")
     parser.add_argument("paths", nargs="+", type=Path, help="要掃描的根目錄或檔案")
+    parser.add_argument("--include-py", action="store_true", help="套件含 .py 檔案")
     args = parser.parse_args()
 
     found = False
     encoding_problems = []
-    for path in iter_target_files(args.paths):
+    for path in iter_target_files(args.paths, include_py=args.include_py):
         raw = path.read_bytes()
         text = None
         for enc in ("utf-8", "utf-8-sig", "cp950", "gb2312", "gbk"):

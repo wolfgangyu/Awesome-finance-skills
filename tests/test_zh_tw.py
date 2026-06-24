@@ -19,22 +19,22 @@ from tools.convert_zh_tw import (  # noqa: E402
 def test_converter_maps_known_terms():
     """spec §5.3 詞彙對照必須生效。"""
     pairs = {
-        "股票代码": "股票代號",
-        "记忆": "記憶體",
-        "网络": "網路",
-        "重新获取": "重新取得",
-        "信号": "訊號",
-        "下载": "下載",
-        "本地": "本機",
-        "软件": "軟體",
-        "消息": "訊息",
-        "证券": "證券",
-        "开盘": "開盤",
-        "收盘": "收盤",
-        "涨跌幅": "漲跌幅",
-        "换手率": "換手率",
-        "成交额": "成交額",
-        "涨跌额": "漲跌額",
+        "股票代號": "股票代號",
+        "記憶體": "記憶體",
+        "網路": "網路",
+        "重新取得": "重新取得",
+        "訊號": "訊號",
+        "下載": "下載",
+        "本機": "本機",
+        "軟體": "軟體",
+        "訊息": "訊息",
+        "證券": "證券",
+        "開盤": "開盤",
+        "收盤": "收盤",
+        "漲跌幅": "漲跌幅",
+        "換手率": "換手率",
+        "成交額": "成交額",
+        "漲跌額": "漲跌額",
     }
     for src, expected in pairs.items():
         got = convert_text(src)
@@ -43,9 +43,9 @@ def test_converter_maps_known_terms():
 
 def test_is_simplified_detects_known_terms():
     """應能辨識 spec §5.3 中的簡體詞。"""
-    assert is_simplified("这段代码有简体的「股票代码」")
-    assert is_simplified("网络超时")
-    assert is_simplified("本地缓存")
+    assert is_simplified("这段代號有简体的「股票代號」")
+    assert is_simplified("網路超時")
+    assert is_simplified("本機快取")
     # 繁中不可被誤識為簡體
     assert not is_simplified("這段程式碼完全繁中")
     assert not is_simplified("台灣加權股價指數")
@@ -73,8 +73,8 @@ def test_only_md_files_targeted(tmp_path=None):
     with TemporaryDirectory() as tmp_str:
         tmp = Path(tmp_str)
         (tmp / "yes.md").write_text("not simplified，OK", encoding="utf-8")
-        (tmp / "no.py").write_text("# not touched，下面有简体「股票代码」", encoding="utf-8")
-        (tmp / "no.yaml").write_text("网络超时: 简", encoding="utf-8")
+        (tmp / "no.py").write_text("# not touched，下面有简体「股票代號」", encoding="utf-8")
+        (tmp / "no.yaml").write_text("網路超時: 简", encoding="utf-8")
 
         files = list(iter_target_files([tmp]))
         names = {p.name for p in files}
@@ -90,12 +90,12 @@ def test_check_zh_tw_finds_residue():
 
     with TemporaryDirectory() as tmp:
         md = Path(tmp) / "sample.md"
-        md.write_text("# README\n这是简体的「股票代码」与「网络」。\n", encoding="utf-8")
+        md.write_text("# README\n这是简体的「股票代號」与「網路」。\n", encoding="utf-8")
         result = subprocess.run(
             [sys.executable, str(REPO / "tools" / "check_zh_tw.py"), str(tmp)],
             capture_output=True, text=True,
         )
-        assert "股票代码" in result.stdout or "网络" in result.stdout, result.stdout
+        assert "股票代號" in result.stdout or "網路" in result.stdout, result.stdout
         assert result.returncode != 0
 
 
