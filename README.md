@@ -6,7 +6,7 @@
 >
 > 🚀 **New:** [DeepEar](https://github.com/HKUSTDial/DeepEar) Live Demo (Free Lite Version) is now online: [https://deepear.vercel.app/](https://deepear.vercel.app/)
 
-[English](#english) | [中文](#中文)
+[English](#english) | [繁體中文](#繁體中文)
 
 ---
 
@@ -44,8 +44,7 @@ cp -r Awesome-finance-skills/skills/* ~/.config/opencode/skills/
 
 **That's it!** Your agent now understands finance. Try asking:
 
-> *"分析贵金属跳水对A股的影响"*  
-> *"Analyze how the gold crash affects A-shares"*
+> *"Analyze how the gold crash affects US and Taiwan stocks"*
 
 🔗 **Live Demo**: [See it in action →](https://opncd.ai/share/wOp37QIs)
 
@@ -56,7 +55,7 @@ cp -r Awesome-finance-skills/skills/* ~/.config/opencode/skills/
 | Skill | Description | Key Feature |
 |:------|:------------|:------------|
 | **alphaear-news** | Real-time financial news & trends | 10+ sources, Polymarket data |
-| **alphaear-stock** | A-Share, HK & US stock data | Ticker search, OHLCV, Fundamentals |
+| **alphaear-stock** | US and Taiwan (TWSE/TPEx) stock data | Ticker search, OHLCV, Fundamentals |
 | **alphaear-sentiment** | FinBERT / LLM sentiment analysis | Score: -1.0 ~ +1.0 |
 | **alphaear-predictor** | Kronos time-series forecasting | News-aware adjustments |
 | **alphaear-signal-tracker** | Investment signal evolution | Strengthen / Weaken / Falsify |
@@ -94,84 +93,84 @@ For a **complete autonomous financial analysis framework**, check out:
 ---
 
 <a name="中文"></a>
-## 🇨🇳 中文
+## 🇹🇼 繁體中文
 
-> 🚀 **全新:** [DeepEar](https://github.com/HKUSTDial/DeepEar) 在线演示 (免费Lite版) 现已上线: [https://deepear.vercel.app/](https://deepear.vercel.app/)
+> 🚀 **全新：** [DeepEar](https://github.com/HKUSTDial/DeepEar) 線上演示（免費 Lite 版）現已上線：[https://deepear.vercel.app/](https://deepear.vercel.app/)
 
-### ✨ 核心亮点
+### ✨ 核心亮點
 
-| 📰 实时新闻聚合 | 📊 逻辑链路可视化 | 🔮 AI 智能预测 |
+| 📰 即時新聞聚合 | 📊 邏輯鏈路可視化 | 🔮 AI 智能預測 |
 |:---:|:---:|:---:|
-| ![新闻分析](figs/news.png) | ![逻辑链路](figs/logic.png) | ![预测分析](figs/predict.png) |
-| 聚合财联社、华尔街见闻、微博、Polymarket 等 10+ 信源 | 自动生成传导链路图，直观解释市场影响 | 基于 Kronos 模型的时序预测，结合新闻情绪调整 |
+| ![新聞分析](figs/news.png) | ![邏輯鏈路](figs/logic.png) | ![預測分析](figs/predict.png) |
+| 聚合財聯社、華爾街見聞、微博、Polymarket 等 10+ 信源 | 自動生成傳導鏈路圖，直觀解釋市場影響 | 基於 Kronos 模型的時序預測，結合新聞情緒動態調整 |
 
-### 🚀 快速开始
+### 🚀 快速開始
 
-#### 方式一：一键安装（推荐）
-现在你可以使用 `npx skills` 直接安装单个技能：
+#### 方式一：一鍵安裝（推薦）
+現在你可以使用 `npx skills` 直接安裝單個技能：
 
 ```bash
-# 安装指定技能（如：alphaear-news）
+# 安裝指定技能（例如：alphaear-news）
 npx skills add RKiding/Awesome-finance-skills@alphaear-news
 
-# 或者搜索更多金融技能
-npx skills find "get the finance news (alphaear-news)"
+# 或者搜尋更多金融技能
+npx skills find "alphaear"
 ```
 
-#### 方式二：手动安装
+#### 方式二手動安裝
 ```bash
-# 克隆仓库
+# 複製倉庫
 git clone https://github.com/RKiding/Awesome-finance-skills.git
 
-# 复制技能到你的 Agent（以 OpenCode 为例）
+# 複製技能到你的 Agent（以 OpenCode 為例）
 cp -r Awesome-finance-skills/skills/* ~/.config/opencode/skills/
 ```
 
-**搞定！** 你的 Agent 现在已经拥有金融分析能力。试试问它：
+**搞定！** 你的 Agent 現在已具備金融分析能力。試試問它：
 
-> *"分析贵金属跳水对A股的影响"*
+> *"分析貴金屬跳水對美國與台灣股市的影響"*
 
-🔗 **在线演示**: [查看实战效果 →](https://opncd.ai/share/wOp37QIs)
+🔗 **線上演示**：[查看實戰效果 →](https://opncd.ai/share/wOp37QIs)
 
 ---
 
-### 📦 技能清单
+### 📦 技能清單
 
 | 技能 | 功能描述 | 核心特性 |
 |:-----|:---------|:---------|
-| **alphaear-news** | 实时财经新闻与热点趋势 | 10+ 信源，Polymarket 数据 |
-| **alphaear-stock** | A股/港股/美股行情与基本面 | 股票搜索、OHLCV、个股基本面 |
-| **alphaear-sentiment** | FinBERT / LLM 情感分析 | 评分范围: -1.0 ~ +1.0 |
-| **alphaear-predictor** | Kronos 时序预测模型 | 结合新闻情绪动态调整 |
-| **alphaear-signal-tracker** | 投资信号演化追踪 | 强化 / 弱化 / 证伪 |
-| **alphaear-logic-visualizer** | 传导链路图生成 | 输出 Draw.io XML |
-| **alphaear-reporter** | 专业研报生成 | 规划 → 撰写 → 编辑 → 图表 |
-| **alphaear-search** | 全网搜索与本地 RAG | 支持 Jina / DDG / 百度 |
+| **alphaear-news** | 即時財經新聞與熱點趨勢 | 10+ 信源，Polymarket 資料 |
+| **alphaear-stock** | 美國與台灣（TWSE/TPEx）股市行情與基本面 | 股票搜尋、OHLCV、個股基本面 |
+| **alphaear-sentiment** | FinBERT / LLM 情感分析 | 評分範圍：-1.0 ~ +1.0 |
+| **alphaear-predictor** | Kronos 時序預測模型 | 結合新聞情緒動態調整 |
+| **alphaear-signal-tracker** | 投資訊號演化追蹤 | 強化 / 弱化 / 證偽 |
+| **alphaear-logic-visualizer** | 傳導鏈路圖生成 | 輸出 Draw.io XML |
+| **alphaear-reporter** | 專業研報生成 | 規劃 → 撰寫 → 編輯 → 圖表 |
+| **alphaear-search** | 全網搜尋與本機 RAG | 支援 Jina / DDG / 百度 |
 
 ---
 
 ### 🔧 技能接入指南
 
-**Awesome Finance Skills** 支持多种主流 Agent 框架：
+**Awesome Finance Skills** 支援多種主流 Agent 框架：
 
-| 框架 | 作用域 | 安装路径 |
+| 框架 | 作用域 | 安裝路徑 |
 |:-----|:-------|:---------|
-| **Antigravity** | 工作区 | `<workspace>/.agent/skills/<skill>/` |
-| | 全局 | `~/.gemini/antigravity/global_skills/<skill>/` |
-| **OpenCode** | 项目 | `.opencode/skills/<skill>/` 或 `.claude/skills/<skill>/` |
-| | 全局 | `~/.config/opencode/skills/<skill>/` |
-| **OpenClaw** | 工作区 | `<workspace>/skills`（优先级最高） |
-| | 托管 | `~/.openclaw/skills` |
-| **Claude Code / Codex** | 个人 | `~/.claude/skills/` 或 `~/.codex/skills/` |
-| | 项目 | `.claude/skills/` |
+| **Antigravity** | 工作區 | `<workspace>/.agent/skills/<skill>/` |
+| | 全域 | `~/.gemini/antigravity/global_skills/<skill>/` |
+| **OpenCode** | 專案 | `.opencode/skills/<skill>/` 或 `.claude/skills/<skill>/` |
+| | 全域 | `~/.config/opencode/skills/<skill>/` |
+| **OpenClaw** | 工作區 | `<workspace>/skills`（優先級最高） |
+| | 託管 | `~/.openclaw/skills` |
+| **Claude Code / Codex** | 個人 | `~/.claude/skills/` 或 `~/.codex/skills/` |
+| | 專案 | `.claude/skills/` |
 
-> 💡 每个技能文件夹需包含 `SKILL.md` 文件。
+> 💡 每個技能資料夾需包含 `SKILL.md` 檔案。
 
 ---
 
 ### 🔗 完整框架
 
-如需**完整的自动化金融分析框架**，请关注：
+如需**完整的自動化金融分析框架**，請關注：
 
 **[DeepEar →](https://github.com/RKiding/AlphaEar)**
 
