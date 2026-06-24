@@ -181,12 +181,13 @@ def is_simplified(text: str) -> bool:
     「A股」「港股」是市場名稱，雖然常以簡體寫法保留，但不算真正需要替換的「簡體」
     —— 一律忽略。
 
-    Replacement char (U+FFFD) 出現時整個檔案判定為有「雙編碼」問題，這個狀況
-    不該被本工具自動決斷；由 ``check_zh_tw.py`` 額外列出供人工 review。
+    只要 src == dst 的條目一律視為「已知繁中」，不該誤判為簡體。
     """
     if "�" in text:
         return False  # 不擅自處理雙編碼，請人 review
-    for src, _ in mapping:
+    for src, dst in mapping:
+        if src == dst:
+            continue
         if src in NOOP_TOKENS:
             continue
         if src in text:

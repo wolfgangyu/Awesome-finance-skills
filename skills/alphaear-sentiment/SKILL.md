@@ -39,7 +39,7 @@ Use this prompt to analyze financial texts if the local tool is insufficient or 
 ```
 
 **Scoring Guide:**
-- **Positive (0.1 ~ 1.0)**: 樂觀消息、獲利成長、政策利多等。
+- **Positive (0.1 ~ 1.0)**: 樂觀訊息、獲利成長、政策利多等。
 - **Negative (-1.0 ~ -0.1)**: 虧損、制裁、價格下跌、悲觀情緒。
 - **Neutral (-0.1 ~ 0.1)**: 客觀報導、盤整走勢、影響不明確。
 
