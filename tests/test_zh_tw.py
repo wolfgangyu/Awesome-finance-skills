@@ -65,6 +65,24 @@ def test_script_files_exist():
     assert (REPO / "tools" / "check_zh_tw.py").exists()
 
 
+def test_only_md_files_targeted(tmp_path=None):
+    """iter_target_files 只回傳 .md，不會碰到 .py / .yaml。"""
+    from tools.convert_zh_tw import iter_target_files
+    from tempfile import TemporaryDirectory
+
+    with TemporaryDirectory() as tmp_str:
+        tmp = Path(tmp_str)
+        (tmp / "yes.md").write_text("not simplified，OK", encoding="utf-8")
+        (tmp / "no.py").write_text("# not touched，下面有简体「股票代码」", encoding="utf-8")
+        (tmp / "no.yaml").write_text("网络超时: 简", encoding="utf-8")
+
+        files = list(iter_target_files([tmp]))
+        names = {p.name for p in files}
+        assert "yes.md" in names
+        assert "no.py" not in names
+        assert "no.yaml" not in names
+
+
 def test_check_zh_tw_finds_residue():
     """check_zh_tw.py 在虛擬 markdown 上要能找出簡體殘餘。"""
     import subprocess
