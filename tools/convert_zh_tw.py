@@ -162,8 +162,8 @@ mapping: list[tuple[str, str]] = [
     ("分钟时间", "分鐘時間"),
 ]
 
-# 編譯為 regex（一次比對）。
-_PATTERN = re.compile("|".join(re.escape(src) for src, _ in mapping))
+# 編譯為 regex（一次比對）。只納入 src != dst 的條目。
+_PATTERN = re.compile("|".join(re.escape(src) for src, _ in mapping if src != _))
 
 
 def _longest_first() -> list[tuple[str, str]]:
