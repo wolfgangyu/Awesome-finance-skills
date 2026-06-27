@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "alphaear-stock": {
+      "source": "RKiding/Awesome-finance-skills",
+      "sourceType": "github",
+      "skillPath": "skills/alphaear-stock/SKILL.md",
+      "computedHash": "39f65061ab7ea18b2a7f32977f4e186363ec5da69fd069f3f5587b43ece517d2"
+    }
+  }
+}
