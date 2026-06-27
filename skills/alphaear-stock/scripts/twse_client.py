@@ -91,7 +91,7 @@ def fetch_kline_twse(ticker: str, start_date: str, end_date: str) -> pd.DataFram
     """
     params = {
         "response": "json",
-        "date": end_date.replace("-", ""),
+        "date": end_date.replace("-", "")[:6],
         "stockNo": ticker,
     }
     resp = requests.get(TWSE_DAILY_URL, params=params, timeout=15)

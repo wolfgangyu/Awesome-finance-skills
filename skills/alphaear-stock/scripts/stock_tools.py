@@ -178,8 +178,12 @@ class StockTools:
                 df_remote = self._fetch_us_kline(ticker, start_date, end_date)
             else:
                 df_remote = fetch_kline_with_fallback(ticker, start_date, end_date)
+                # TWSE/TPEx API 回傳最近一個月資料，不受 start_date/end_date 限制
+                # 過濾至請求範圍內，避免寫入超出請求範圍的舊年份資料
+                df_remote = df_remote.loc[
+                    (df_remote["date"] >= start_date) & (df_remote["date"] <= end_date)
+                ].copy()
                 if not df_remote.empty and "change_pct" not in df_remote.columns:
-                    df_remote = df_remote.copy()
                     df_remote["change_pct"] = df_remote["close"].astype(float).pct_change() * 100
                     df_remote["change_pct"] = df_remote["change_pct"].fillna(0)
 
