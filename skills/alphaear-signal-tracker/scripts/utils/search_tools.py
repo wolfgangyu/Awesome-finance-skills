@@ -12,7 +12,10 @@ from agno.agent import Agent
 from loguru import logger
 from datetime import datetime
 from .database_manager import DatabaseManager
-from .content_extractor import ContentExtractor
+try:
+    from .content_extractor import ContentExtractor
+except ImportError:
+    ContentExtractor = None  # Graceful degradation if content_extractor not available
 from .llm.factory import get_model
 from .hybrid_search import LocalNewsSearch
 
@@ -448,22 +451,25 @@ class SearchTools:
             skip_content_enrichment = (engine == "jina")
 
             if enrich and normalized_results:
-                logger.info(f"🕸️ Enriching {len(normalized_results)} search results...")
-                extractor = ContentExtractor()
+                logger.info(f"Enriching {len(normalized_results)} search results...")
+                if ContentExtractor is None:
+                    logger.warning("ContentExtractor not available, skipping enrichment")
+                else:
+                    extractor = ContentExtractor()
 
-                for item in normalized_results:
-                    if item.get("url"):
-                        try:
-                            if skip_content_enrichment and item.get("content") and len(item.get("content", "")) > 100:
-                                full_content = item["content"]
-                            else:
-                                full_content = extractor.extract_with_jina(item["url"], timeout=60)
+                    for item in normalized_results:
+                        if item.get("url"):
+                            try:
+                                if skip_content_enrichment and item.get("content") and len(item.get("content", "")) > 100:
+                                    full_content = item["content"]
+                                else:
+                                    full_content = extractor.extract_with_jina(item["url"], timeout=60)
 
-                            if full_content and len(full_content) > 100:
-                                item["content"] = full_content
-                                logger.info(f"  Enriched: {item['title'][:20]}...")
-                        except Exception as e:
-                            logger.warning(f"Failed to enrich {item['url']}: {e}.")
+                                if full_content and len(full_content) > 100:
+                                    item["content"] = full_content
+                                    logger.info(f"  Enriched: {item['title'][:20]}...")
+                            except Exception as e:
+                                logger.warning(f"Failed to enrich {item['url']}: {e}.")
 
             # 快取结果 list
             if normalized_results:

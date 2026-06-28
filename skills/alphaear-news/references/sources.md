@@ -1,26 +1,17 @@
-# News Sources Reference
+# 新聞來源參考
 
-## Supported News Sources
+## RSS Feed 來源
 
-| Source ID | Name | Category | Description |
-|:----------|:-----|:---------|:------------|
-| `cls` | 财联社 | Finance | Real-time financial news, focus on A-shares and macro. |
-| `wallstreetcn` | 华尔街见闻 | Finance | Global markets, macroeconomics, and detailed analysis. |
-| `xueqiu` | 雪球热榜 | Finance | Community-driven stock discussions and hot topics. |
-| `weibo` | 微博热搜 | General | Trending social topics, good for public sentiment. |
-| `zhihu` | 知乎热榜 | General | In-depth discussions and Q&A on trending topics. |
-| `baidu` | 百度热搜 | General | General public search trends. |
-| `toutiao` | 今日头条 | General | Algorithmic news recommendations. |
-| `douyin` | 抖音热榜 | General | Short video trends (titles only). |
-| `thepaper` | 澎湃新闻 | General | Serious journalism and current affairs. |
-| `36kr` | 36氪 | Tech | Startup, venture capital, and tech industry news. |
-| `ithome` | IT之家 | Tech | Consumer electronics and tech gadgets. |
-| `v2ex` | V2EX | Tech | Developer community trends. |
-| `juejin` | 掘金 | Tech | Developer blogs and tutorials. |
-| `hackernews` | Hacker News | Tech | Global tech and startup news (English). |
+| Source ID | 名稱 | 語言 | 說明 |
+|:----------|:-----|:-----|:-----|
+| `cna_finance` | 中央社財經 | zh-TW | 台灣財經、金融政策、股市新聞 |
+| `cna_tech` | 中央社科技 | zh-TW | 台灣科技產業、半導體、AI 新聞 |
+| `nhk_economy` | NHK 經濟 | ja | 日本經濟、外匯、日股新聞 |
+| `bloomberg` | Bloomberg Markets | en | 美股、全球市場新聞 |
+| `investing_reuters` | Reuters (via Investing.com) | en | 路透社財經新聞（透過 Investing.com RSS 轉發） |
 
 ## Polymarket
 
 - **Base URL**: `https://gamma-api.polymarket.com`
-- **Data**: Prediction markets (e.g., "Will Fed cut rates?").
-- **Usage**: Use `get_active_markets` to retrieve top active markets by volume.
+- **資料**: 預測市場（例如：Fed 會不會降息？）
+- **用法**: 使用 `get_active_markets` 取得交易量最高的熱門市場

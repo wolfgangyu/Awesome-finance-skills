@@ -15,7 +15,7 @@
 
 | Skill | What It Does |
 |:------|:------------|
-| **alphaear-news** | Aggregates hot financial news from 10+ sources (Cailian, Wallstreetcn, Xueqiu, Polymarket...) |
+| **alphaear-news** | Fetches financial news from RSS feeds (CNA, Bloomberg, Reuters, NHK) + Polymarket prediction data |
 | **alphaear-stock** | Searches and retrieves stock data — TWSE / TPEx (Taiwan) and US stocks via yfinance |
 | **alphaear-sentiment** | Guides the Agent to analyze financial text sentiment (-1.0 ~ +1.0), no external ML models needed |
 | **alphaear-search** | Web search (Jina / DuckDuckGo) + local RAG over cached news |
@@ -76,7 +76,7 @@ alphaear-reporter →  generates research reports (uses everything above)
 
 | 技能 | 功能說明 |
 |:------|:---------|
-| **alphaear-news** | 聚合 10+ 信源的財經熱點新聞（財聯社、華爾街見聞、雪球、Polymarket...） |
+| **alphaear-news** | 從 RSS 來源抓取財經新聞（中央社、Bloomberg、Reuters、NHK）+ Polymarket 預測市場 |
 | **alphaear-stock** | 搜尋台股（TWSE/TPEx）與美股行情，支援代碼搜尋與歷史 OHLCV |
 | **alphaear-sentiment** | 引導 Agent 分析金融文本情緒（-1.0 ~ +1.0），無需額外安裝機器學習模型 |
 | **alphaear-search** | 網路搜尋（Jina / DuckDuckGo）+ 本機 RAG 檢索 |

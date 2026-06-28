@@ -1,137 +1,136 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## 專案本質
-
-**Awesome Finance Skills** 是一個「技能套件集合」，不是單一應用。
-
-- 每個 `skills/<skill-name>/` 是獨立、可散佈的 Agent skill（OpenAI/Claude/Agno 框架皆可載入）。
-- 每個 skill 帶有 `SKILL.md`（YAML frontmatter `name`+`description` + Markdown body）以及可選的 `scripts/`、`references/`、`assets/` 資源。
-- 使用者透過 `npx skills add RKiding/Awesome-finance-skills@<skill-name>` 安裝單一 skill，或把整個 `skills/*` 複製到 OpenCode/Claude/Codex 的 skill 目錄（參考 README 表格）。
-- 上游完整框架是 [DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)，本倉庫是「拆解後的 skill 切片」。
-
-## 重要：CWD 與 import path 慣例
-
-> 這個集合的 scripts 子目錄佈局並不一致，未來修改時容易踩雷，務必看清。
-
-每個 skill 下的 `scripts/` 兩種佈局並存：
-
-| 類型 | 套件 | 佈局 |
-|:-----|:-----|:-----|
-| 「flat」 | `alphaear-news`, `alphaear-stock`, `alphaear-sentiment`, `alphaear-search`, `alphaear-deepear-lite`, `alphaear-logic-visualizer` | `scripts/<tool>.py`, `scripts/database_manager.py`，模組內用 `from .database_manager import DatabaseManager` |
-| 「nested」 | `alphaear-predictor`, `alphaear-signal-tracker`, `alphaear-reporter` | `scripts/*.py` 是 entry / agent，`scripts/{utils,prompts,schema,tools,predictor}/` 才是實作；模組間用 `from .utils.xxx` |
-
-SKILL.md 範例與 `tests/` 目錄的 import 都各自反映自家佈局。修改任何子模組時，先 `ls <skill>/scripts/` 確認是 flat 還是 nested。
-
-## 添加或修改 skill 的標準流程
-
-來自 `skills/skill-creator/SKILL.md` 的硬性規則：
-
-1. **命名**：`name` 必須是 lowercase+digits+hyphens，≤ 64 字元，不可以開頭/結尾 `-`、不可 `--`。
-2. **Frontmatter**：YAML 欄位只能用 `name, description, license, allowed-tools, metadata`（驗證腳本會擋）。
-3. **描述即觸發器**：`description` 是 skill 被載入的唯一依據，需含「做什麼 + 何時用」，「When to use」不要寫到 body 內。
-4. **Body ≤ 500 行**；過長的 API、schema、prompt 範例移到 `references/` 並在 SKILL.md 連結。
-5. **不允許**額外 README/CHANGELOG 等輔助檔案（只留 SKILL.md + 真的有用的 resources）。
-6. **每個 skill 必須含 `SKILL.md`**（這是 package_skill 驗證的硬條件）。
-
-建立流程：
-```bash
-# 1. 產出模板
-python skills/skill-creator/scripts/init_skill.py <skill-name> --path skills [--resources scripts,references,assets] [--examples]
-
-# 2. 編寫 SKILL.md + resources
-
-# 3. 驗證 + 打套件（會自動跑 quick_validate.py）
-python skills/skill-creator/scripts/package_skill.py skills/<skill-name> [輸出目錄]
-# 產出 <skill-name>.skill（其實是 zip，便於 npx skills 等管道發佈）
-```
-
-## 開發常用指令
-
-```bash
-# 跑某一個 skill 的測試（從 skill 目錄加入 sys.path，使用 unittest）
-python tests/alphaear-news/test_news.py        # 或 -m unittest
-python tests/alphaear-stock/test_stock.py
-python tests/alphaear-predictor/test_predictor.py
-python tests/alphaear-reporter/test_reporter.py
-python skills/alphaear-signal-tracker/tests/test_tracker.py
-python skills/alphaear-logic-visualizer/tests/test_visualizer.py
-
-# DeepEar Lite 連線煙霧測試
-python skills/alphaear-deepear-lite/scripts/deepear_lite.py
-
-# 驗證 + 打套件某個 skill
-python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
-python skills/skill-creator/scripts/package_skill.py skills/<skill-name>
-
-# 找新聞 source 對應 ID
-cat skills/alphaear-news/references/sources.md
-```
-
-每個測試的通例：`scripts.xxx_tools` 是 entry class、`scripts.database_manager` 提供 SQLite（預設路徑 `data/signal_flux.db`，測試常用 `DatabaseManager(":memory:")`）。
-
-## 架構與 skill 職責地圖
-
-依資料流由下到上：
-
-| Skill | 角色 | 關鍵 entry | 對外依賴 |
-|:------|:-----|:-----------|:---------|
-| **alphaear-news** | 多源熱點新聞聚合 + Polymarket 預測市場 | `scripts/news_tools.py::NewsNowTools` | NewsNow API (`https://newsnow.busiyi.world/api/s?id=<id>`)、Jina 內容萃取、Polymarket |
-| **alphaear-stock** | 台股（TWSE/TPEx）/ 美股代碼搜尋與歷史 OHLCV | `scripts/stock_tools.py::StockTools`（內含 `TWSEClient` 從 `scripts/twse_client.py` 提供 TWSE/TPEx fallback） | yfinance、requests、pandas |
-| **alphaear-sentiment** | FinBERT / LLM 情緒分析（-1.0 ~ +1.0） | `scripts/sentiment_tools.py::SentimentTools` | FinBERT、LLM（Gemini/Anthropic/OpenAI router 在 `scripts/llm/`） |
-| **alphaear-search** | Web 搜尋（Jina / DDG / Baidu）+ 本機 RAG | `scripts/search_tools.py::SearchTools` | duckduckgo-search、requests、`hybrid_search.py`（搜 `daily_news` 表） |
-| **alphaear-deepear-lite** | 從 `deepear.vercel.app/latest.json` 拉最新訊號 | `scripts/deepear_lite.py::DeepEarLiteTools` | 純 HTTP，無 DB |
-| **alphaear-predictor** | Kronos 時序預測 + 新聞情緒調整 | `scripts/forecast_agent.py::ForecastUtils` → `kronos_predictor.KronosPredictorUtility` | torch、transformers、sentence-transformers；模型放在 `exports/models/`，**只接受 `kronos_news_*.pt` 模式 + `weights_only=True`** |
-| **alphaear-signal-tracker** | 追蹤既有 `InvestmentSignal` 的演化（強化/弱化/證偽） | `scripts/fin_agent.py::FinAgent` | 內部呼叫 search + stock 工具；agentic，靠 `references/PROMPTS.md` 三段 prompt（FinResearcher → FinAnalyst → Signal Tracking） |
-| **alphaear-reporter** | 規劃→撰寫→編輯 → 圖表的研報流程 | `scripts/report_agent.py::ReportAgent`、`scripts/visualizer.py::VisualizerTools` | 內部組合：news + sentiment + stock + search + logic-visualizer |
-| **alphaear-logic-visualizer** | 將邏輯鏈轉成 Draw.io XML 並輸出 HTML | `scripts/visualizer.py::render_drawio_to_html` | 標準庫；prompt 在 `references/PROMPTS.md` |
-| **skill-creator** | 上面說的，建立/驗證/打套件 skill 的工具集 | `scripts/{init_skill, package_skill, quick_validate}.py` | pyyaml |
-
-## 跨 skill 的共享抽象
-
-- **資料模型（核心）**：見 `skills/alphaear-predictor/scripts/schema/models.py`（`InvestmentSignal`、`TransmissionNode`、`ForecastResult`、`KLinePoint`、`ResearchContext`、`InvestmentReport`、`FilterResult`、`SignalCluster`）。其它 skill（reporter、signal-tracker）的 `schema/` 大多重複同一份 schema，**改 schema 時要同步 3 處**。
-- **資料庫**：每個 skill 各自宣告 `DatabaseManager` 路徑 `data/signal_flux.db`，表結構 (`daily_news` / `search_cache` / `search_detail` / 行情表等) 在各 skill 的 `scripts/database_manager.py` 中分散維護（這是有意保持 skill 獨立可裝）。要新增 DB 欄位時，傾向在原 skill 內補 `ALTER TABLE` 容錯新增（predictor 版本內可見此模式），而非強耦合單一 migration。
-- **LLM 抽象層**：`scripts/llm/{router,factory,capability}.py`，按能力路由到 Anthropic / OpenAI / Gemini（等）。`alphaear-search` 與 `alphaear-sentiment` 共用這層；reporter/signal-tracker 用自己的 utils 變體。
-
-## 安全注意事項
-
-- `alphaear-predictor` 的 SKILL.md 標註 **CAUTION**：Kronos 權重只從 `exports/models/` 載入，且鎖定 `kronos_news_*.pt` pattern + `weights_only=True`。新增權重時務必遵守，不要把任意 `.pt` 放進去。
-- 美股行情走 `yfinance`，README 提到台灣用戶可能需要 `HTTP_PROXY` / `HTTPS_PROXY` 環境變數。
-
-## 測試與驗證
-
-`tests/<skill>/` 目錄是各 skill 的 smoke test，目前只驗證 import / class 初始化（預期 LLM / 模型沒到位時會 fail-soft）。重 model 與重網路（`alphaear-predictor` 載 Kronos、`alphaear-stock` 連 yfinance/TWSE/TPEx）我這邊環境通常不會跑通，因此：
-- 修改 schema 或 contracts 時，跑對應的 `tests/<skill>/test_*.py` 看 import 階段有沒有炸。
-- 需要實際連網/重 model 的功能改動，建議 staging 環境或人工驗證；不要宣稱「通過」。
-
-## 觀察與修復的模式
-
-- SKILL.md body 重複標題（例如 `alphaear-predictor` 有兩個 `### 1. Forecast Market Trends`）— 新增能力章節時檢查是否已存在。
-- SKILL.md 範例程式和實際 import path 不完全一致時，優先信實際檔案位置（看 `ls <skill>/scripts/`）。
-- `signal-tracker` 目前 SKILL 直說「目前是從 FinAgent 抽出來的 pattern，未來重構為 standalone」，修改前先看 `scripts/fin_agent.py::track_signal` 實作。
+# CLAUDE.md
 
-## v1.1.0 釋版摘要（schema 重抽 + 市場重構 + zh-TW）
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Phase 1 — Schema 抽離**
+## Project Overview
 
-- 三個共用 schema 的 skill（predictor / reporter / signal-tracker）把 `InvestmentSignal` 等 Pydantic 模型集中到 `skills/_shared/alphaear_schema/`。
-- `tools/sync_shared_schema.py` 把 _shared 同步到各 skill 的 vendored 子模組；`scripts/schema/models.py` 保留薄 shim 供舊 import path 用。
-- `scripts.alphaear_schema.models.InvestmentSignal` 與 `scripts.schema.models.InvestmentSignal` 是**同一個 class**，v1.1.0 → v1.2.0 期間兩路徑都可走；v1.2.0 將拆 shim。
-- v1.2.0 migration deadline：commit message 需明確標 `BREAKING CHANGE`。
+**Awesome Finance Skills** is a collection of independent, distributable Agent skills — not a single application.
 
-**Phase 2 — Market Refactor**
+- Each `skills/<skill-name>/` is a self-contained skill (loadable by OpenAI/Claude/Agno frameworks).
+- Each skill ships with `SKILL.md` (YAML frontmatter `name`+`description` + Markdown body) and optional `scripts/`, `references/`, `assets/` resources.
+- Users install a single skill via `npx skills add RKiding/Awesome-finance-skills@<skill-name>`, or copy all `skills/*` into their agent's skill directory.
+- The upstream framework is [DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar); this repo is the "decayed skill slice."
 
-- `alphaear-stock` 移除 `akshare` 與 `EastMoneyDirect`（A 股 / 港股支援）。
-- 新增 `skills/alphaear-stock/scripts/twse_client.py`：TWSE 上市 + TPEx 上櫃官方 HTTP，4 位數字代號先試 TWSE、空時 fallback TPEx。
-- 美股仍走 `yfinance`。
-- 台股基本面（`get_stock_fundamentals`）目前回空 dict，後續 PR 計畫整合 Timeverse/My-TW-Coverage（1,735 家台股研究資料）作為 fallback 來源。
-- Skill description 與 SKILL.md 檔案已更新。
+## Data Flow
 
-**Phase 3 — zh-TW 轉換**
+Skills are independent but compose into a pipeline:
 
-- 全 repo 對應到 `tools/convert_zh_tw.py` + `tools/check_zh_tw.py`：
-  - `convert_zh_tw.py [paths] [--include-py]`：轉簡體 → 繁體（台灣用語）。
-  - `check_zh_tw.py [paths] [--include-py]`：掃描剩餘簡體；exit 1 = 有殘留。
-- 注意：`convert_zh_tw.py` 自身因為含大量 mapping，內部不可避免地帶有簡體字元（工具性內容），是預期行為。
-- README 與 SKILL.md 全部繁中。
+```
+alphaear-stock  ->  stock prices & tickers (TWSE/TPEx/yfinance)
+alphaear-news   ->  aggregated financial news (10+ sources)
+alphaear-search ->  web search + local RAG
+alphaear-sentiment ->  text sentiment (-1.0 ~ +1.0)
+alphaear-predictor ->  Kronos time-series forecasting
+alphaear-signal-tracker ->  InvestmentSignal lifecycle (strengthen/weaken/falsify)
+alphaear-reporter ->  research reports (composes all above)
+alphaear-logic-visualizer ->  Draw.io XML diagrams
+alphaear-deepear-lite ->  lightweight DeepEar signal fetcher
+skill-creator ->  tooling to create/validate/package skills
+```
+
+## Import Layout Warning
+
+The `scripts/` subdirectory layout is **not consistent** across skills. Always `ls <skill>/scripts/` before editing.
+
+| Type | Packages | Layout |
+|:-----|:-----|:-----|
+| "flat" | `alphaear-news`, `alphaear-stock`, `alphaear-sentiment`, `alphaear-search`, `alphaear-deepear-lite`, `alphaear-logic-visualizer` | `scripts/<tool>.py`, `scripts/database_manager.py`; intra-module imports use `from .database_manager import DatabaseManager` |
+| "nested" | `alphaear-predictor`, `alphaear-signal-tracker`, `alphaear-reporter` | `scripts/*.py` is entry/agent; `scripts/{utils,prompts,schema,tools,predictor}/` contains implementations; inter-module imports use `from .utils.xxx` |
+
+## Creating or Modifying a Skill
+
+Hard rules from `skills/skill-creator/SKILL.md`:
+
+1. **Naming**: `name` must be lowercase+digits+hyphens, <= 64 chars, no leading/trailing `-`, no `--`.
+2. **Frontmatter**: Only `name, description, license, allowed-tools, metadata` (validator rejects extras).
+3. **Description is the trigger**: `description` is the sole basis for skill loading; include "what it does + when to use"; do not duplicate "When to use" in body.
+4. **Body <= 500 lines**; move long API schemas/prompt examples to `references/`.
+5. **No extra files**: No README/CHANGELOG — only `SKILL.md` + genuinely useful resources.
+6. **Every skill must have `SKILL.md`** (hard requirement for `package_skill` validation).
+
+Creation flow:
+```bash
+# 1. Generate template
+python3 skills/skill-creator/scripts/init_skill.py <skill-name> --path skills [--resources scripts,references,assets] [--examples]
+
+# 2. Write SKILL.md + resources
+
+# 3. Validate + package (runs quick_validate.py automatically)
+python3 skills/skill-creator/scripts/package_skill.py skills/<skill-name> [output_dir]
+# Produces <skill-name>.skill (actually a zip for npx skills distribution)
+```
+
+## Development Commands
+
+```bash
+# Run a skill's smoke test (unittest, adds skill dir to sys.path)
+python3 tests/alphaear-news/test_news.py
+python3 tests/alphaear-stock/test_stock.py
+python3 tests/alphaear-predictor/test_predictor.py
+python3 tests/alphaear-reporter/test_reporter.py
+python3 skills/alphaear-signal-tracker/tests/test_tracker.py
+python3 skills/alphaear-logic-visualizer/tests/test_visualizer.py
+
+# DeepEar Lite connectivity smoke test
+python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py
+
+# Validate + package a skill
+python3 skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
+python3 skills/skill-creator/scripts/package_skill.py skills/<skill-name>
+
+# Map news source IDs
+cat skills/alphaear-news/references/sources.md
+
+# Sync shared schema to all vendored skills
+python3 tools/sync_shared_schema.py --check   # dry-run: report drift only
+python3 tools/sync_shared_schema.py            # apply sync
+
+# Convert simplified Chinese to zh-TW / check remaining
+python3 tools/convert_zh_tw.py [paths...] --include-py
+python3 tools/check_zh_tw.py [paths...] --include-py  # exit 1 = remaining issues
+```
+
+Test convention: `scripts.xxx_tools` is the entry class; `scripts.database_manager` provides SQLite (default `data/signal_flux.db`, tests typically use `DatabaseManager(":memory:")`).
+
+## Architecture: Shared Abstractions
+
+- **Data models (core)**: See `skills/_shared/alphaear_schema/models.py` for `InvestmentSignal`, `TransmissionNode`, `ForecastResult`, `KLinePoint`, `ResearchContext`, `InvestmentReport`, `FilterResult`, `SignalCluster`. Other skills (reporter, signal-tracker) vendor copies — **changing a schema requires syncing to 3 places** via `tools/sync_shared_schema.py`.
+- **Database**: Each skill declares its own `data/signal_flux.db` with table structures (`daily_news`, `search_cache`, `search_detail`, quote tables) in its own `scripts/database_manager.py`. This is intentional for skill independence. Adding columns uses `ALTER TABLE` with error tolerance within each skill, not centralized migration.
+- **LLM abstraction**: `scripts/llm/{router,factory,capability}.py` routes by capability to Anthropic / OpenAI / Gemini. Shared by `alphaear-search` and `alphaear-sentiment`; reporter/signal-tracker use their own variants.
+
+## Do NOT Introduce
+
+Banned or removed technologies. Do not re-add these:
+
+- **`akshare`** — Removed in v1.1.0 market refactor (A-share/HK-stock support dropped).
+- **`EastMoneyDirect`** — Removed alongside akshare.
+- **BERT / FinBERT** — Stripped from signal-tracker, reporter, and search_tools in recent commits. Do not re-introduce ML sentiment models.
+- **Arbitrary `.pt` model files** — `alphaear-predictor` only loads from `exports/models/` matching `kronos_news_*.pt` with `weights_only=True`. Never load random `.pt` files.
+- **Shared `DatabaseManager`** — Each skill must keep its own DB schema; do not consolidate into a single database.
+
+## Security Notes
+
+- `alphaear-predictor`: Kronos weights only from `exports/models/`, locked to `kronos_news_*.pt` + `weights_only=True`.
+- US stock data uses `yfinance`; Taiwan users may need `HTTP_PROXY` / `HTTPS_PROXY` env vars.
+
+## Testing Strategy
+
+`tests/<skill>/` contains smoke tests that verify import/class initialization only (fail-soft when LLM/models are unavailable). Heavy model and network tests (`alphaear-predictor` loading Kronos, `alphaear-stock` hitting yfinance/TWSE/TPEx) typically won't pass locally:
+
+- When modifying schemas or contracts, run `tests/<skill>/test_*.py` to verify the import stage doesn't crash.
+- For actual networking/heavy-model changes, verify in staging or manually; do not claim "passed."
+
+## Known Pitfalls
+
+- SKILL.md body may have duplicate section headings (e.g., `alphaear-predictor` had two `### 1. Forecast Market Trends`) — check for duplicates before adding capability sections.
+- SKILL.md example code may not match actual import paths; trust the file system (`ls <skill>/scripts/`) over documentation.
+- `signal-tracker` was extracted from FinAgent; it's a pattern, not yet fully standalone. Check `scripts/fin_agent.py::track_signal` before modifying.
+- When SKILL.md examples and actual code disagree, trust the actual file layout.
+
+## My Working Style
+
+- **First principles**: Debug bugs from first principles, not guesswork.
+- **Plan before action**: Before important development steps, produce a plan (use `using-superpowers` skill) before executing.
+- **Open source first**: Use existing open-source packages; don't reinvent wheels.
+- **Verify before claiming**: Evidence before assertions. If tests fail, report the output — don't claim success.
+- **Compress = fleeting note**: Before context compression, write a fleeting note to `~/.claude/projects/<project>/memory/` capturing conversation highlights.
