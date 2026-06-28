@@ -219,32 +219,9 @@ class SentimentToolkit(Toolkit):
         self._db = db
         
         tools = [
-            self.analyze_sentiment,
             self.batch_update_sentiment,
         ]
         super().__init__(name="sentiment_toolkit", tools=tools, **kwargs)
-
-    def analyze_sentiment(self, text: str) -> str:
-        """
-        分析文本的情绪极性。
-        
-        Args:
-            text: 需要分析的文本内容，如新闻标题或摘要。
-        
-        Returns:
-            情绪分析结果，套件含分值(-1.0到1.0)和標籤(positive/negative/neutral)。
-        """
-        result = self._sentiment_tools.analyze_sentiment(text)
-        
-        score = result.get('score', 0.0)
-        label = result.get('label', 'neutral')
-        reason = result.get('reason', '')
-        
-        return f"""情绪分析结果:
-- 文本: {text[:100]}{'...' if len(text) > 100 else ''}
-- 分值: {score:.2f}
-- 標籤: {label}
-- 分析: {reason}"""
 
     def batch_update_sentiment(self, source: str = None, limit: int = 20) -> str:
         """

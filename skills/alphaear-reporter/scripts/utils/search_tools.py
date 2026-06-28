@@ -446,53 +446,25 @@ class SearchTools:
             # 3. 抓取正文 & 计算情绪 (Enrichment)
             # 注意：如果使用 Jina Search，内容已经是 LLM 友好格式，可選擇跳过 enrichment
             skip_content_enrichment = (engine == "jina")
-            
+
             if enrich and normalized_results:
-                logger.info(f"🕸️ Enriching {len(normalized_results)} search results with Jina & Sentiment...")
+                logger.info(f"🕸️ Enriching {len(normalized_results)} search results...")
                 extractor = ContentExtractor()
-                
-                # Lazy load sentiment tool
-                if not hasattr(self, 'sentiment_tool') or self.sentiment_tool is None:
-                    from .sentiment_tools import SentimentTools
-                    self.sentiment_tool = SentimentTools(self.db)
-                
+
                 for item in normalized_results:
                     if item.get("url"):
                         try:
-                            # 如果是 Jina Search，内容已经足够好，跳过额外抓取
                             if skip_content_enrichment and item.get("content") and len(item.get("content", "")) > 100:
                                 full_content = item["content"]
                             else:
-                                # Use Jina Reader to get full content
                                 full_content = extractor.extract_with_jina(item["url"], timeout=60)
-                            
+
                             if full_content and len(full_content) > 100:
                                 item["content"] = full_content
-                                
-                                # Calculate sentiment
-                                # Use title + snippet of content for efficiency
-                                text_to_analyze = f"{item['title']} {full_content[:500]}"
-                                sent_result = self.sentiment_tool.analyze_sentiment(text_to_analyze)  # Using self.sentiment_tool
-                                score = sent_result.get('score', 0.0)
-                                item["sentiment_score"] = float(score)
-                                
-                                logger.info(f"  ✅ Enriched: {item['title'][:20]}... (Sentiment: {score:.2f})")
-                            else:
-                                # Fallback: Use snippet for sentiment
-                                logger.info(f"  ⚠️ Content short/failed for {item['url']}, using snippet for sentiment.")
-                                text_to_analyze = f"{item['title']} {item['content']}" # content is snippet here
-                                sent_result = self.sentiment_tool.analyze_sentiment(text_to_analyze)
-                                score = sent_result.get('score', 0.0)
-                                item["sentiment_score"] = float(score)
-
+                                logger.info(f"  Enriched: {item['title'][:20]}...")
                         except Exception as e:
-                             # Fallback: Use snippet for sentiment on error
-                            logger.warning(f"Failed to enrich {item['url']}: {e}. Using snippet.")
-                            text_to_analyze = f"{item['title']} {item['content']}"
-                            sent_result = self.sentiment_tool.analyze_sentiment(text_to_analyze)
-                            score = sent_result.get('score', 0.0)
-                            item["sentiment_score"] = float(score)
-            
+                            logger.warning(f"Failed to enrich {item['url']}: {e}.")
+
             # 快取结果 list
             if normalized_results:
                 # Pass list directly, DB manager will handle JSON dump for main cache and populate search_details
