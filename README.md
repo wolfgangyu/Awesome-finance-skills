@@ -31,14 +31,14 @@
 
 ```bash
 # Install one skill at a time
-npx skills add RKiding/Awesome-finance-skills@alphaear-stock
-npx skills add RKiding/Awesome-finance-skills@alphaear-news
+npx skills add wolfgangyu/Awesome-finance-skills@alphaear-stock
+npx skills add wolfgangyu/Awesome-finance-skills@alphaear-news
 ```
 
 #### Install All Skills
 
 ```bash
-git clone https://github.com/RKiding/Awesome-finance-skills.git
+git clone https://github.com/wolfgangyu/Awesome-finance-skills.git
 cp -r Awesome-finance-skills/skills/* ~/.claude/skills/
 ```
 
@@ -92,14 +92,14 @@ alphaear-reporter →  generates research reports (uses everything above)
 
 ```bash
 # 一次安裝一個技能
-npx skills add RKiding/Awesome-finance-skills@alphaear-stock
-npx skills add RKiding/Awesome-finance-skills@alphaear-news
+npx skills add wolfgangyu/Awesome-finance-skills@alphaear-stock
+npx skills add wolfgangyu/Awesome-finance-skills@alphaear-news
 ```
 
 #### 安裝全部技能
 
 ```bash
-git clone https://github.com/RKiding/Awesome-finance-skills.git
+git clone https://github.com/wolfgangyu/Awesome-finance-skills.git
 cp -r Awesome-finance-skills/skills/* ~/.claude/skills/
 ```
 
