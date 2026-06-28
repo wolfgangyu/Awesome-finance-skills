@@ -1,55 +1,63 @@
---- 
+---
 name: alphaear-sentiment
-description: Analyze finance text sentiment using FinBERT or LLM. Use when the user needs to determine the sentiment (positive/negative/neutral) and score of financial text markets.
+description: Analyze sentiment of financial news and text. Use when the user asks to evaluate market sentiment, determine if news is positive or negative, or needs a sentiment score for financial text.
 ---
 
 # AlphaEar Sentiment Skill
 
 ## Overview
 
-This skill provides sentiment analysis capabilities tailored for financial texts, supporting both FinBERT (local model) and LLM-based analysis modes.
+This skill guides the Agent to perform sentiment analysis on financial texts. Instead of relying on local models (BERT/FinBERT), it delegates analysis directly to the Agent's reasoning capabilities.
 
-## Capabilities
+## How to Perform Sentiment Analysis
 
-### 1. Analyze Sentiment (FinBERT / Local)
+When analyzing financial news or text, follow these steps:
 
-Use `scripts/sentiment_tools.py` for high-speed, local sentiment analysis using FinBERT.
+### 1. Evaluate Sentiment
 
-**Key Methods:**
+Read the text and determine:
+- **Positive (+0.1 to +1.0)**: Bullish signals, earnings growth, policy tailwinds, product launches, analyst upgrades
+- **Negative (-1.0 to -0.1)**: Bearish signals, losses, sanctions, price drops, analyst downgrades, regulatory risks
+- **Neutral (-0.1 to +0.1)**: Factual reporting, consolidation, ambiguous impact
 
-- `analyze_sentiment(text)`: Get sentiment score and label using localized FinBERT model.
-  - **Returns**: `{'score': float, 'label': str, 'reason': str}`.
-  - **Score Range**: -1.0 (Negative) to 1.0 (Positive).
-- `batch_update_news_sentiment(source, limit)`: Batch process unanalyzed news in the database (FinBERT only).
+### 2. Return Structured Result
 
-### 2. Analyze Sentiment (LLM / Agentic)
+Always return a JSON object with these fields:
 
-For higher accuracy or reasoning capabilities, **YOU (the Agent)** should perform the analysis using the Prompt below, calling the LLM directly, and then update the database if necessary.
-
-#### Sentiment Analysis Prompt
-
-Use this prompt to analyze financial texts if the local tool is insufficient or if reasoning is required.
-
-```markdown
-請分析以下金融 / 新聞文本的情緒極性。
-回傳嚴格的 JSON 格式：
-{"score": <float: -1.0 ~ 1.0>, "label": "<positive/negative/neutral>", "reason": "<簡短理由>"}
-
-文本：{text}
+```json
+{"score": <float: -1.0 ~ 1.0>, "label": "<positive/negative/neutral>", "reason": "<brief explanation in Traditional Chinese>"}
 ```
 
-**Scoring Guide:**
-- **Positive (0.1 ~ 1.0)**: 樂觀訊息、獲利成長、政策利多等。
-- **Negative (-1.0 ~ -0.1)**: 虧損、制裁、價格下跌、悲觀情緒。
-- **Neutral (-0.1 ~ 0.1)**: 客觀報導、盤整走勢、影響不明確。
+### 3. Examples
 
-#### Helper Methods
-- `update_single_news_sentiment(id, score, reason)`: Use this to save your manual analysis to the database.
+**Positive example:**
+> Text: "Apple announces M7 chip roadmap shift toward AI, BofA maintains bullish outlook."
+> Result: `{"score": 0.5, "label": "positive", "reason": "晶片路線圖轉向AI為長期利多，機構維持看好"}`
+
+**Negative example:**
+> Text: "KGI downgrades Apple to Hold from Outperform; Apple raises prices for the first time since COVID."
+> Result: `{"score": -0.6, "label": "negative", "reason": "評級下調加上破天荒漲價，短期利空明顯"}`
+
+**Neutral example:**
+> Text: "Apple stock closed at $283.60, down 3% from yesterday's intraday high."
+> Result: `{"score": 0.0, "label": "neutral", "reason": "客觀行情報導，無明確多空訊號"}`
+
+## Saving Results to Database
+
+If you need to save your analysis to the database, use:
+
+```python
+from scripts.database_manager import DatabaseManager
+from scripts.sentiment_tools import SentimentTools
+
+db = DatabaseManager("data/signal_flux.db")
+tools = SentimentTools(db)
+tools.update_single_news_sentiment(news_id, score, reason)
+```
 
 ## Dependencies
 
-- `torch` (for FinBERT)
-- `transformers` (for FinBERT)
 - `sqlite3` (built-in)
+- `loguru`
 
-Ensure `DatabaseManager` is initialized correctly.
+No external ML libraries required.
