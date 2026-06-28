@@ -4,7 +4,7 @@
 >
 > 一套即插即用的技能套件，為 LLM Agent 注入即時新聞、台股美股行情、情緒分析、邏輯鏈路可視化與市場預測能力。
 
-[English](#english) | [繁體中文](#繁體中文)
+[English](#english) | [繁體中文](#中文)
 
 ---
 
@@ -127,9 +127,3 @@ alphaear-reporter →  生成研報（整合以上所有技能）
 
 - **[DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)** — 完整的自動化金融分析框架
 - **[SKILL.md 規範](https://github.com/anthropics/claude-code/tree/main/src/skills)** — 技能格式規格
-
----
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=RKiding/Awesome-finance-skills&type=Date)](https://star-history.com/#RKiding/Awesome-finance-skills&Date)
