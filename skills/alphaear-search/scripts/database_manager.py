@@ -154,6 +154,25 @@ class DatabaseManager:
         """, (q_wild, q_wild, limit))
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_daily_news(self, source: Optional[str] = None, limit: int = 100, days: int = 1) -> List[Dict]:
+        """Get recent news from the daily_news table."""
+        cursor = self.conn.cursor()
+        time_threshold = (datetime.now().timestamp() - days * 86400)
+        time_threshold_str = datetime.fromtimestamp(time_threshold).isoformat()
+
+        query = "SELECT * FROM daily_news WHERE crawl_time >= ?"
+        params = [time_threshold_str]
+
+        if source:
+            query += " AND source = ?"
+            params.append(source)
+
+        query += " ORDER BY crawl_time DESC, rank LIMIT ?"
+        params.append(limit)
+
+        cursor.execute(query, params)
+        return [dict(row) for row in cursor.fetchall()]
+
     def close(self):
         if self.conn:
             self.conn.close()
