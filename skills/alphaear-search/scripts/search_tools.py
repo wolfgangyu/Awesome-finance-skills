@@ -26,11 +26,41 @@ from .content_extractor import ContentExtractor
 
 from .hybrid_search import LocalNewsSearch
 
+from .google_search_engine import GoogleSearchEngine
+
 
 
 # 預設搜尋快取 TTL（秒），可透過環境變數覆蓋
 
 DEFAULT_SEARCH_TTL = int(os.getenv("SEARCH_CACHE_TTL", "3600"))  # 預設 1 小時
+
+
+
+# 市場偵測正則表達式
+
+US_TICKER_RE = re.compile(r'\b[A-Z]{2,5}\b')
+
+TW_TICKER_RE = re.compile(r'\b\d{4}\b')
+
+
+
+# 台股公司名稱關鍵字
+
+TW_COMPANY_KEYWORDS = [
+    '台積電', '聯發科', '鴻海', '台達電', '富邦金', '兆豐金',
+    '國泰金', '中華電', '台塑', '南亞', '中鋼', '廣達',
+    '聯電', '日月光', '統一', '大立光', '華碩', '和碩',
+]
+
+
+
+# 美股公司名稱關鍵字
+
+US_COMPANY_KEYWORDS = [
+    '蘋果', '英偉達', '微軟', '特斯拉', '谷歌', '亞馬遜',
+    'Meta', 'NVIDIA', 'Apple', 'Microsoft', 'Tesla',
+    'Google', 'Amazon', 'AMD', 'Intel', 'Netflix',
+]
 
 
 
@@ -314,13 +344,13 @@ class SearchTools:
 
         
 
-        # 檢查 Jina API Key 是否配置
+        # 檢查 Jina API Key 是否配置（Google 引擎共用）
 
         jina_api_key = os.getenv("JINA_API_KEY", "").strip()
 
         self._jina_enabled = bool(jina_api_key)
 
-        
+
 
         self._engines = {
 
@@ -332,7 +362,7 @@ class SearchTools:
 
         }
 
-        
+
 
         # 如果配置了 Jina API Key，新增 Jina 引擎
 
@@ -342,7 +372,11 @@ class SearchTools:
 
             logger.info("🚀 Jina Search engine enabled (JINA_API_KEY configured)")
 
-        
+            self._engines["google"] = GoogleSearchEngine()
+
+            logger.info("🚀 Google Search engine enabled (via Jina)")
+
+
 
         # 確定預設搜尋引擎
 
@@ -356,29 +390,81 @@ class SearchTools:
 
 
 
-    def search(self, query: str, engine: str = None, max_results: int = 5, ttl: Optional[int] = None) -> str:
+    def _detect_market(self, query: str) -> Optional[str]:
+
+        """根據查詢內容自動偵測市場類型。"""
+
+        if not query:
+
+            return None
+
+        if TW_TICKER_RE.search(query):
+
+            return "tw"
+
+        for keyword in TW_COMPANY_KEYWORDS:
+
+            if keyword in query:
+
+                return "tw"
+
+        if US_TICKER_RE.search(query):
+
+            return "us"
+
+        for keyword in US_COMPANY_KEYWORDS:
+
+            if keyword in query:
+
+                return "us"
+
+        return None
+
+
+
+    def _select_engine(self, market: Optional[str]) -> str:
+
+        """根據市場類型選擇適搜尋引擎。"""
+
+        if market == "us":
+
+            return "jina" if self._jina_enabled else "ddg"
+
+        elif market == "tw":
+
+            return "google" if self._jina_enabled else "ddg"
+
+        else:
+
+            return self._default_engine
+
+
+
+    def search(self, query: str, engine: str = None, max_results: int = 5, ttl: Optional[int] = None, market: Optional[str] = None) -> str:
 
         """
 
         使用指定搜尋引擎執行網路搜尋，結果會被快取以提高效率。
 
-        
+
 
         Args:
 
             query: 搜尋關鍵詞，如 "英偉達財報" 或 "光伏行業政策"。
 
-            engine: 搜尋引擎選擇。可選值: 
+            engine: 搜尋引擎選擇。可選值:
 
                     "jina" (Jina Search，需配置 JINA_API_KEY，LLM友好輸出),
 
-                    "ddg" (DuckDuckGo，推薦英文/國際搜尋), 
+                    "ddg" (DuckDuckGo，推薦英文/國際搜尋),
 
                     "baidu" (百度，推薦中文/國內搜尋),
 
                     "local" (本機歷史新聞搜尋，基於向量+BM25)。
 
-                    預設: 若配置了 JINA_API_KEY 則使用 "jina"，否則 "ddg"。
+                    預設: 若未指定 engine 且提供 market，則依市場自動選擇；
+
+                    否則若配置了 JINA_API_KEY 則使用 "jina"，否則 "ddg"。
 
             max_results: 期望回傳的結果數量，預設 5 條。
 
@@ -388,7 +474,11 @@ class SearchTools:
 
                  設為 0 可強制重新整理。
 
-        
+            market: 市場類型，可選 "us"、"tw"。若未指定且 engine 為 None，
+
+                    會根據 query 自動偵測。
+
+
 
         Returns:
 
@@ -400,7 +490,9 @@ class SearchTools:
 
         if engine is None:
 
-            engine = self._default_engine
+            detected_market = self._detect_market(query) if market is None else market
+
+            engine = self._select_engine(detected_market)
 
         
 
@@ -538,7 +630,7 @@ class SearchTools:
 
 
 
-    def search_list(self, query: str, engine: str = None, max_results: int = 5, ttl: Optional[int] = None, enrich: bool = True) -> List[Dict]:
+    def search_list(self, query: str, engine: str = None, max_results: int = 5, ttl: Optional[int] = None, enrich: bool = True, market: Optional[str] = None) -> List[Dict]:
 
         """
 
@@ -546,7 +638,7 @@ class SearchTools:
 
         Dict 套件含: title, href (or url), body (or snippet)
 
-        
+
 
         Args:
 
@@ -554,13 +646,19 @@ class SearchTools:
 
             enrich: 是否抓取正文內容 (預設 True)
 
+            market: 市場類型，可選 "us"、"tw"。若未指定且 engine 為 None，
+
+                    會根據 query 自動偵測。
+
         """
 
         # 使用預設引擎
 
         if engine is None:
 
-            engine = self._default_engine
+            detected_market = self._detect_market(query) if market is None else market
+
+            engine = self._select_engine(detected_market)
 
             
 
