@@ -20,6 +20,8 @@ from agno.tools.baidusearch import BaiduSearchTools
 
 from datetime import datetime
 
+from loguru import logger
+
 from .database_manager import DatabaseManager
 
 from .content_extractor import ContentExtractor
@@ -977,4 +979,79 @@ class SearchTools:
         
 
         return "\n\n".join(aggregated_results)
+
+    def _fetch_price(self, ticker: str, market: str) -> Optional[Dict]:
+        """使用 yfinance 取得即時股價。
+
+        Args:
+            ticker: 股票代碼（如 'AAPL' 或 '2330'）
+            market: 市場類型 ('us' 或 'tw')
+
+        Returns:
+            dict with price, currency, change, change_pct 或 None
+        """
+        if not ticker or not ticker.strip():
+            return None
+
+        ticker = ticker.strip().upper()
+
+        # 台股加上 .TW 後綴
+        if market == "tw" and not ticker.endswith(".TW"):
+            ticker = f"{ticker}.TW"
+
+        try:
+            import yfinance as yf
+            stock = yf.Ticker(ticker)
+            info = stock.info
+
+            if not info or "regularMarketPrice" not in info:
+                logger.warning(f"⚠️ No price data for {ticker}")
+                return None
+
+            currency = info.get("currency", "USD" if market == "us" else "TWD")
+            return {
+                "price": info.get("regularMarketPrice"),
+                "currency": currency,
+                "change": info.get("regularMarketChange"),
+                "change_pct": info.get("regularMarketChangePercent"),
+                "source": "yfinance",
+            }
+
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to fetch price for {ticker}: {e}")
+            return None
+
+    def _extract_tickers(self, query: str) -> List[str]:
+        """從查詢字串中提取可能的股票代碼。
+
+        Args:
+            query: 搜尋查詢字串
+
+        Returns:
+            提取到的 ticker 列表（去重）
+        """
+        tickers = []
+        if not query:
+            return tickers
+
+        # 提取美股 ticker（2-5 大寫字母）
+        for match in US_TICKER_RE.finditer(query):
+            ticker = match.group()
+            # 排除常見非 ticker 的英文縮寫
+            if ticker not in ("API", "CEO", "CFO", "GDP", "IPO", "VPN", "ETF", "AI", "IT"):
+                tickers.append(ticker)
+
+        # 提取台股代號（4 碼數字）
+        for match in TW_TICKER_RE.finditer(query):
+            tickers.append(match.group())
+
+        # 去重保留順序
+        seen = set()
+        unique = []
+        for t in tickers:
+            if t not in seen:
+                seen.add(t)
+                unique.append(t)
+        return unique
+
 
