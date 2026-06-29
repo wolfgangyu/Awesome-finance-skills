@@ -13,8 +13,6 @@ This skill utilizes the Kronos model (via `KronosPredictorUtility`) to perform t
 
 ### 1. Forecast Market Trends
 
-### 1. Forecast Market Trends
-
 **Workflow:**
 1.  **Generate Base Forecast**: Use `scripts/kronos_predictor.py` (via `KronosPredictorUtility`) to generate the technical/quantitative forecast.
 2.  **Adjust Forecast (Agentic)**: Use the **Forecast Adjustment Prompt** in `references/PROMPTS.md` to subjectively adjust the numbers based on latest news/logic.
@@ -31,8 +29,8 @@ from scripts.utils.database_manager import DatabaseManager
 db = DatabaseManager()
 predictor = KronosPredictorUtility()
 
-# Forecast
-forecast = predictor.predict("600519", horizon="7d")
+# Forecast (e.g., AAPL or 2330.TW)
+forecast = predictor.predict("AAPL", horizon="7d")
 print(forecast)
 ```
 
