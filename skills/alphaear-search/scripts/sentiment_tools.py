@@ -16,7 +16,7 @@ class SentimentTools:
         self.db = db
 
     def update_single_news_sentiment(self, news_id: Union[str, int], score: float, reason: str = "") -> bool:
-        """將 Agent 分析的情緒結果保存到資料庫。"""
+        """將 Agent 分析的情緒結果儲存到資料庫。"""
         try:
             cursor = self.db.conn.cursor()
             cursor.execute("""
@@ -31,7 +31,7 @@ class SentimentTools:
             return False
 
     def batch_update_news_sentiment(self, source: Optional[str] = None, limit: int = 50) -> int:
-        """批量更新資料庫中新聞的情緒分數 — 由 Agent 自行執行分析。"""
+        """批次更新資料庫中新聞的情緒分數 — 由 Agent 自行執行分析。"""
         news_items = self.db.get_daily_news(source=source, limit=limit)
         to_analyze = [item for item in news_items if not item.get('sentiment_score')]
         if not to_analyze:
