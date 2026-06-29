@@ -63,15 +63,19 @@ class NewsToolkit(Toolkit):
 
     def get_unified_trends(self, sources: str = "cna_finance,bloomberg") -> str:
         """
-        取得多平台綜合新闻报告。
+        取得多平台綜合新聞報告。
 
         Args:
-            sources: 要扫描的新闻源，用逗号分隔。
+            sources: 要掃描的新聞源，用逗號分隔。
                      有效值: cna_finance, cna_tech, nhk_economy, bloomberg, investing_reuters
-                     预设: "cna_finance,bloomberg" (台湾財經 + 美股)
+                     預設: "cna_finance,bloomberg" (台灣財經 + 美股)
+                     可依市場選擇：
+                     - 台股: "cna_finance,cna_tech"
+                     - 美股: "bloomberg,investing_reuters"
+                     - 台美: "cna_finance,bloomberg" (預設)
 
         Returns:
-            格式化的新闻彙整报告。
+            格式化的新聞彙整報告。
         """
         source_list = [s.strip() for s in sources.split(",")]
         report = self._news_tools.get_unified_trends(source_list)

@@ -1,6 +1,6 @@
 # AlphaEar Finance Report Prompts
 
-Use these prompts to guide the Agent in generating professional financial reports.
+Use these prompts to guide the Agent in generating professional financial reports for TW/US markets.
 
 ## 1. Cluster Signals (Planner)
 
@@ -51,10 +51,11 @@ You are a senior financial analyst. Write a deep analysis section for the core t
 - Subtitles: `###`
 - **Charts**: Insert at least 1-2 `json-chart` blocks.
 
-**Chart Example:**
+**Chart Example (market-aware):**
 ```json-chart
-{"type": "forecast", "ticker": "002371.SZ", "title": "Forecast", "pred_len": 5}
+{"type": "forecast", "ticker": "2330.TW", "title": "Forecast", "pred_len": 5}
 ```
+(Ticker format depends on market: TW=4-digit like 2330.TW, US=letters like AAPL)
 ```
 
 ## 3. Final Assembly (Editor)
@@ -75,3 +76,9 @@ You are a professional editor. Assemble the drafted sections into a final report
 
 Output strictly Markdown.
 ```
+
+## Language & Market Notes
+
+- All report output must be in **Traditional Chinese** (繁體中文).
+- Ticker formats: Taiwan = 4 digits (e.g., `2330.TW`), US = 1-5 letters (e.g., `AAPL`).
+- News sources: TW = CNA (中央社), US = Bloomberg/Reuters.
