@@ -1,4 +1,4 @@
-"""Google 搜尋引擎 — 透過 Jina Reader 包裝 Google 搜尋結果。
+"""Google 搜尋引擎 — 透過 Jina Reader 封裝 Google 搜尋結果。
 
 使用 s.jina.ai 的 Jina Search API 獲取 LLM-friendly 的搜尋結果。
 """
@@ -75,7 +75,7 @@ class GoogleSearchEngine:
             max_results: 回傳結果數量
 
         Returns:
-            搜尋結果列表，每個結果包含 title, url, content
+            搜尋結果列表，每個結果帶有 title, url, content
         """
         if not query:
             return []
