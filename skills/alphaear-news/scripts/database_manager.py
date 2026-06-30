@@ -11,7 +11,12 @@ class DatabaseManager:
     Reduced version for alphaear-news skill
     DB 統一放在 C:/Users/chimi/Awesome-finance-skills/data/signal_flux.db
     """
-    DEFAULT_DB = Path.home() / "Awesome-finance-skills" / "data" / "signal_flux.db"
+    # 從 script 位置往上推 3 層到 repo 根，portable（Ubuntu / Windows 皆適用）
+    DEFAULT_DB = (
+        Path(__file__).resolve().parents[3]
+        / "data"
+        / "signal_flux.db"
+    )
 
     def __init__(self, db_path: str = None):
         if db_path is None:
