@@ -163,7 +163,6 @@ python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py --local
 ### Related Projects
 
 - **[DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)** — Full autonomous financial analysis framework
-- **[SKILL.md spec](https://github.com/anthropics/claude-code/tree/main/src/skills)** — Skill format specification
 
 ---
 
@@ -322,4 +321,4 @@ python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py --local
 ### 相關專案
 
 - **[DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)** — 完整的自動化金融分析框架
-- **[SKILL.md 規範](https://github.com/anthropics/claude-code/tree/main/src/skills)** — 技能格式規格
+
