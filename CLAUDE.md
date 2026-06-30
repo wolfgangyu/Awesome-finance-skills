@@ -25,7 +25,6 @@ alphaear-signal-tracker ->  InvestmentSignal lifecycle (strengthen/weaken/falsif
 alphaear-reporter ->  research reports (composes all above)
 alphaear-logic-visualizer ->  Draw.io XML diagrams
 alphaear-deepear-lite ->  lightweight DeepEar signal fetcher
-skill-creator ->  tooling to create/validate/package skills
 ```
 
 ## Import Layout Warning
@@ -36,29 +35,6 @@ The `scripts/` subdirectory layout is **not consistent** across skills. Always `
 |:-----|:-----|:-----|
 | "flat" | `alphaear-news`, `alphaear-stock`, `alphaear-sentiment`, `alphaear-search`, `alphaear-deepear-lite`, `alphaear-logic-visualizer` | `scripts/<tool>.py`, `scripts/database_manager.py`; intra-module imports use `from .database_manager import DatabaseManager` |
 | "nested" | `alphaear-predictor`, `alphaear-signal-tracker`, `alphaear-reporter` | `scripts/*.py` is entry/agent; `scripts/{utils,prompts,schema,tools,predictor}/` contains implementations; inter-module imports use `from .utils.xxx` |
-
-## Creating or Modifying a Skill
-
-Hard rules from `skills/skill-creator/SKILL.md`:
-
-1. **Naming**: `name` must be lowercase+digits+hyphens, <= 64 chars, no leading/trailing `-`, no `--`.
-2. **Frontmatter**: Only `name, description, license, allowed-tools, metadata` (validator rejects extras).
-3. **Description is the trigger**: `description` is the sole basis for skill loading; include "what it does + when to use"; do not duplicate "When to use" in body.
-4. **Body <= 500 lines**; move long API schemas/prompt examples to `references/`.
-5. **No extra files**: No README/CHANGELOG — only `SKILL.md` + genuinely useful resources.
-6. **Every skill must have `SKILL.md`** (hard requirement for `package_skill` validation).
-
-Creation flow:
-```bash
-# 1. Generate template
-python3 skills/skill-creator/scripts/init_skill.py <skill-name> --path skills [--resources scripts,references,assets] [--examples]
-
-# 2. Write SKILL.md + resources
-
-# 3. Validate + package (runs quick_validate.py automatically)
-python3 skills/skill-creator/scripts/package_skill.py skills/<skill-name> [output_dir]
-# Produces <skill-name>.skill (actually a zip for npx skills distribution)
-```
 
 ## Development Commands
 
@@ -73,10 +49,6 @@ python3 skills/alphaear-logic-visualizer/tests/test_visualizer.py
 
 # DeepEar Lite connectivity smoke test
 python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py
-
-# Validate + package a skill
-python3 skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
-python3 skills/skill-creator/scripts/package_skill.py skills/<skill-name>
 
 # Map news source IDs
 cat skills/alphaear-news/references/sources.md
