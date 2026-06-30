@@ -1,3 +1,3 @@
 __version__ = "1.1.0"
-__commit__ = "ad079637b926006876e7dbe827e8cbf58048049d"
+__commit__ = "d05e729fb8e72aa4d8d51f4d6a6b8a380173145c"
 __skill__ = "alphaear-reporter"

@@ -19,7 +19,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SHARED_SRC = REPO_ROOT / "skills" / "_shared" / "alphaear_schema"
-SKILLS = ["alphaear-predictor", "alphaear-reporter", "alphaear-signal-tracker"]
+SKILLS = ["alphaear-composer", "alphaear-predictor", "alphaear-reporter", "alphaear-signal-tracker"]
 
 
 def _read_version(init_path: Path) -> str | None:

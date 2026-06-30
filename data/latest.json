@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-06-30T23:35:24.318521",
+  "run_id": "composer_20260630_233524",
+  "count": 1,
+  "signals": [
+    {
+      "signal_id": "NVDA",
+      "title": "NVDA reaches new all-time high",
+      "summary": "NVDA reaches new all-time high、AI chip demand surges globally。整體情緒偏正面。",
+      "reasoning": "基於 2 則新聞聚合分析。情緒指標: +0.50，信心指數: 0.61，影響強度: 3/5。",
+      "transmission_chain": [
+        {
+          "node_name": "人工智慧",
+          "impact_type": "中性",
+          "logic": "新聞提及 AI 相關議題"
+        }
+      ],
+      "sentiment_score": 0.5,
+      "confidence": 0.61,
+      "intensity": 3,
+      "expectation_gap": 0.3,
+      "timeliness": 0.7,
+      "expected_horizon": "T+1",
+      "price_in_status": "未知",
+      "impact_tickers": [
+        {
+          "ticker": "NVDA",
+          "weight": 1.0
+        }
+      ],
+      "industry_tags": [
+        "AI"
+      ],
+      "sources": [
+        {
+          "title": "NVDA reaches new all-time high",
+          "url": "https://example.com/nvda",
+          "source_name": "cnbc"
+        },
+        {
+          "title": "AI chip demand surges globally",
+          "url": "https://example.com/chips",
+          "source_name": "reuters"
+        }
+      ],
+      "search_results": []
+    }
+  ],
+  "charts": {}
+}
