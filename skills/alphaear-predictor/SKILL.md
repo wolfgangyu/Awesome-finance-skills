@@ -65,3 +65,46 @@ This skill requires the **Kronos** model and an embedding model.
 -   `pandas`
 -   `numpy`
 -   `scikit-learn`
+
+## Fine-tuning Guide (TW/US)
+
+This skill now supports fine-tuning the `news_proj` layer on TW/US market data.
+
+### Prerequisites
+
+1. Ensure `data/signal_flux.db` has populated `stock_list` and `stock_prices` tables.
+2. Install `feedparser` for RSS parsing: `pip install feedparser`
+
+### Step 1: Build Dataset
+
+```bash
+python scripts/build_dataset.py --tickers auto --from 2024-01-01 --to 2026-06-30 --shock-threshold 2.0 --markets TW,US
+```
+
+This discovers price shocks, collects news via yfinance/RSS (no baidu), verifies causality with LLM, and writes `data/training_dataset.parquet`.
+
+### Step 2: Train news_proj
+
+```bash
+python scripts/train_news_proj.py --dataset data/training_dataset.parquet --epochs 30 --lr 1e-3 --seed 42
+```
+
+This freezes the Kronos base model, trains only `news_proj`, and saves to `exports/models/kronos_news_v1_<timestamp>.pt`.
+
+### Step 3: Evaluate
+
+```bash
+python scripts/evaluate_news_proj.py --model latest --us-only
+```
+
+Outputs a MAE table comparing base vs news-aware predictions.
+
+### Cache Mode
+
+Re-run dataset building without re-fetching news:
+
+```bash
+python scripts/build_dataset.py --tickers auto --cache-only
+```
+
+This reads from `search_cache` and `causality_cache.parquet` to skip already-collected items.
