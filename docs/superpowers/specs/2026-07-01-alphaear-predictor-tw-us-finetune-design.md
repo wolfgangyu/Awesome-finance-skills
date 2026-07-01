@@ -38,6 +38,12 @@ alphaear-predictor 目前使用 Kronos 基礎模型（via `KronosPredictorUtilit
 - 不修改現有 `scripts/utils/search_tools.py` 的搜尋入口（新增 `news_sources.py` 獨立包裝）
 - 不涉及其他市場（日股、韓股等）
 
+## 營運政策（CI / 訓練入口）
+
+- **訓練不跑在 main branch 的 CI 流程中**：所有 training/evaluate CLI 只能在本地手動觸發。
+- CI 只跑單元測試（`tests/alphaear-predictor/test_*.py`），不載入 Kronos 模型、不呼叫 yfinance。
+- 任何 `.github/workflows/` 的 `python -m pytest` 步驟不得有 `--heavy` 或 `--run-heavy` 旗標。
+
 ## 設計方案
 
 ### 1. 檔案結構變更
@@ -381,3 +387,5 @@ tests/alphaear-predictor/
 6. **Windows 相容**：不使用 symlink；`kronos_news_latest.txt` 為預設同步機制
 
 7. **不修改現有 `KronosPredictorUtility.get_base_forecast()` 的推理介面**
+
+8. **CI 不 auto-run 訓練**：見「營運政策」；未來若要把訓練納入 CI，必須新增獨立 proposal 說明 GPU 配額與排程。
