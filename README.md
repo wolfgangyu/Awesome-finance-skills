@@ -23,7 +23,6 @@
 | **alphaear-signal-tracker** | Tracks evolution of investment signals — Strengthen / Weaken / Falsify |
 | **alphaear-reporter** | Generates professional research reports: Plan → Write → Edit → Charts |
 | **alphaear-logic-visualizer** | Converts logic chains into Draw.io XML diagrams |
-| **alphaear-deepear-lite** | Lightweight fetcher for DeepEar market signals (supports local & remote sources) |
 | **alphaear-composer** | Assembles raw data into `latest.json` — the missing link that turns independent skills into a pipeline |
 
 ### How to Use
@@ -181,7 +180,6 @@ python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py --local
 | **alphaear-signal-tracker** | 追蹤投資訊號演化：強化 / 弱化 / 證偽 |
 | **alphaear-reporter** | 生成專業研報：規劃 → 撰寫 → 編輯 → 圖表 |
 | **alphaear-logic-visualizer** | 將邏輯鏈轉為 Draw.io XML 圖表 |
-| **alphaear-deepear-lite** | 輕量版 DeepEar 訊號取得工具（支援本機與遠端雙模式） |
 | **alphaear-composer** | 將分散的資料技能組裝成 `latest.json` — 讓獨立 skills 變成完整 pipeline |
 
 ### 如何使用
