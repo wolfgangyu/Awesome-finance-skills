@@ -35,3 +35,13 @@ wheels/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# alphaear-predictor TW/US fine-tune artifacts and caches
+skills/alphaear-predictor/exports/models/_backup/
+skills/alphaear-predictor/exports/models/kronos_news_latest.txt
+skills/alphaear-predictor/data/skipped_tickers.json
+skills/alphaear-predictor/data/news_rss_cache.json
+skills/alphaear-predictor/data/causality_cache.parquet
+skills/alphaear-predictor/data/news_emb_cache.parquet
+skills/alphaear-predictor/data/training_dataset.parquet
+data/signal_flux_test.db
