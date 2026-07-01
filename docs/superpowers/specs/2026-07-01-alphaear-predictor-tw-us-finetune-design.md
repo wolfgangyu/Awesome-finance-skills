@@ -57,7 +57,12 @@ skills/alphaear-predictor/
 │   │       ├── training.py              # 瘦身為共用 helper（AutoSynthesisTrainer 保留 core）
 │   │       └── evaluation.py            # 瘦身為共用 helper（NewsModelEvaluator 保留 core）
 │   └── tests/test_*.py                  # 新增對應的 smoke 測試
-└── exports/training_results/            # 既有評估輸出目錄（保留）
+└── exports/
+    ├── models/
+    │   ├── kronos_news_<timestamp>.pt   # 訓練產出
+    │   ├── kronos_news_latest.txt       # 指向最新 .pt 檔名的純文字 placeholder
+    │   └── _backup/                     # 覆蓋前的舊 .pt 備份（.gitignore）
+    └── training_results/                # 既有評估輸出目錄（保留）
 ```
 
 ### 2. `market_detect.py` — 市場分類與名稱解析
@@ -219,8 +224,8 @@ python scripts/train_news_proj.py \
    - **不過濾 unverified 樣本**（全部加入訓練）
 5. **備份與儲存**：
    - 寫出新 `.pt` 到 `exports/models/kronos_news_<timestamp>.pt`
-   - 覆蓋前將舊檔備份到 `exports/models/_backup/`
-   - 同時寫一份 `exports/models/kronos_news_latest.pt`（symlink 或 copy）
+   - 覆蓋前將舊檔備份到 `exports/models/_backup/`（此目錄需加入 `.gitignore`）
+   - 寫一份 `exports/models/kronos_news_latest.txt`，內容為最新 .pt 的檔名（**Windows 友善，不使用 symlink**）
 6. 輸出 `training_report.json`：loss 曲線、best loss、train/val 樣本數、config 快照
 
 #### 6.3 Reproducibility
@@ -290,7 +295,7 @@ AVERAGE      | -        | 0.8790         | 0.8063         |   +8.2%
 |------|------|
 | `exports/models/` 不存在 | `os.makedirs(..., exist_ok=True)` |
 | `--resume` 但找不到來源 .pt | CLI 報錯 exit code 3 |
-| `latest` symlink 在 Windows 建立失敗 | fallback 寫 `latest.txt` 指向目標檔名 |
+| `latest` 同步 | Windows 預設使用 `kronos_news_latest.txt` placeholder（內容為最新 .pt 檔名），不嘗試 symlink |
 | `data/news_emb_cache.parquet` 損壞 | 印 warning 跳過，用 in-memory recount |
 
 ### 9. 測試策略
@@ -373,4 +378,6 @@ tests/alphaear-predictor/
 3. **news_proj-only 凍結主體**：不碰上游 `finetune_csv` 全模型微調
 4. **預設 lookback=20 pred_len=5**：日 K 為主
 5. **TW / US 限定**：不涉及其他市場（日股、韓股等）
-6. **不修改現有 `KronosPredictorUtility.get_base_forecast()` 的推理介面**
+6. **Windows 相容**：不使用 symlink；`kronos_news_latest.txt` 為預設同步機制
+
+7. **不修改現有 `KronosPredictorUtility.get_base_forecast()` 的推理介面**
