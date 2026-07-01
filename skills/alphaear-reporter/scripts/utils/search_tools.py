@@ -7,7 +7,6 @@ import time
 import threading
 from typing import List, Dict, Optional, Any
 from agno.tools.duckduckgo import DuckDuckGoTools
-from agno.tools.baidusearch import BaiduSearchTools
 from agno.agent import Agent
 from loguru import logger
 from datetime import datetime
@@ -168,7 +167,6 @@ class SearchTools:
         
         self._engines = {
             "ddg": DuckDuckGoTools(),
-            "baidu": BaiduSearchTools(),
             "local": LocalNewsSearch(db)
         }
         
@@ -188,20 +186,19 @@ class SearchTools:
         使用指定搜尋引擎执行網路搜尋，结果会被快取以提高效率。
         
         Args:
-            query: 搜尋关键词，如 "英伟达财报" 或 "光伏行業政策"。
-            engine: 搜尋引擎選擇。可选值: 
+            query: 搜尋關鍵詞，如 "英偉達財報" 或 "半導體產業政策"。
+            engine: 搜尋引擎選擇。可選值:
                     "jina" (Jina Search，需配置 JINA_API_KEY，LLM友好輸出),
-                    "ddg" (DuckDuckGo，推荐英文/国际搜尋), 
-                    "baidu" (百度，推荐中文/国内搜尋),
-                    "local" (本機歷史新闻搜尋，基于向量+BM25)。
-                    預設: 若配置了 JINA_API_KEY 则使用 "jina"，否则 "ddg"。
-            max_results: 期望回傳的结果数量，預設 5 条。
+                    "ddg" (DuckDuckGo，推薦英文/國際搜尋),
+                    "local" (本機歷史新聞搜尋，基於向量+BM25)。
+                    預設: 若配置了 JINA_API_KEY 則使用 "jina"，否則 "ddg"。
+            max_results: 期望回傳的結果數量，預設 5 條。
             ttl: 快取有效期（秒）。如果快取超过此時間会重新搜尋。
                  預設使用环境變數 SEARCH_CACHE_TTL 或 3600 秒。
                  设為 0 可强制刷新。
         
         Returns:
-            搜尋结果的文本描述，套件含标题、摘要和链接。
+            搜尋結果的文字描述，套件含標題、摘要和連結。
         """
         # 使用預設引擎（如果配置了 Jina 则优先使用 Jina）
         if engine is None:
@@ -236,8 +233,6 @@ class SearchTools:
                     })
             elif engine == "ddg":
                 results = tool.duckduckgo_search(query, max_results=max_results)
-            elif engine == "baidu":
-                results = tool.baidu_search(query, max_results=max_results)
             elif engine == "local":
                 # LocalNewsSearch 回傳的是 List[Dict]
                 local_results = tool.search(query, top_n=max_results)
@@ -265,23 +260,19 @@ class SearchTools:
                 except Exception as e2:
                     logger.error(f"❌ DDG fallback also failed for {query}: {e2}")
             elif engine == "ddg":
-                logger.warning(f"⚠️ DDG search failed, falling back to baidu: {query} ({e})")
-                try:
-                    return self.search(query, engine="baidu", max_results=max_results, ttl=ttl)
-                except Exception as e2:
-                    logger.error(f"❌ Baidu fallback also failed for {query}: {e2}")
+                logger.error(f"❌ DDG search failed for {query}: {e}")
 
             logger.error(f"❌ Search failed for {query}: {e}")
             return f"Error occurred during search: {str(e)}"
 
     def search_list(self, query: str, engine: str = None, max_results: int = 5, ttl: Optional[int] = None, enrich: bool = True) -> List[Dict]:
         """
-        执行搜尋并回傳结构化列表 (List[Dict])。
+        執行搜尋並回傳結構化列表 (List[Dict])。
         Dict 套件含: title, href (or url), body (or snippet)
-        
+
         Args:
-            engine: 搜尋引擎，預設使用配置的預設引擎（Jina 优先）
-            enrich: 是否抓取正文内容 (預設 True)
+            engine: 搜尋引擎，預設使用配置的預設引擎（Jina 優先）
+            enrich: 是否抓取正文內容 (預設 True)
         """
         # 使用預設引擎
         if engine is None:
@@ -397,8 +388,6 @@ class SearchTools:
                     })
             elif engine == "ddg":
                 results = tool.duckduckgo_search(query, max_results=max_results)
-            elif engine == "baidu":
-                results = tool.baidu_search(query, max_results=max_results)
             elif engine == "local":
                 # LocalNewsSearch 回傳的是 List[Dict]
                 local_results = tool.search(query, top_n=max_results)
@@ -488,11 +477,7 @@ class SearchTools:
                 except Exception as e2:
                     logger.error(f"❌ DDG fallback (search_list) also failed for {query}: {e2}")
             elif engine == "ddg":
-                logger.warning(f"⚠️ DDG search_list failed, falling back to baidu: {query} ({e})")
-                try:
-                    return self.search_list(query, engine="baidu", max_results=max_results, ttl=ttl, enrich=enrich)
-                except Exception as e2:
-                    logger.error(f"❌ Baidu fallback (search_list) also failed for {query}: {e2}")
+                logger.error(f"❌ DDG search_list failed for {query}: {e}")
 
             logger.error(f"❌ Structured search failed for {query}: {e}")
             return []
@@ -572,15 +557,15 @@ class SearchTools:
         使用多个搜尋引擎同時搜尋并聚合结果，获得更全面的信息覆盖。
         
         Args:
-            query: 搜尋关键词。
-            engines: 要使用的搜尋引擎列表。可选值: ["ddg", "baidu"]。
-                     預設同時使用 ddg 和 baidu。
-            max_results: 每个引擎期望回傳的结果数量。
-        
+            query: 搜尋關鍵詞。
+            engines: 要使用的搜尋引擎列表。可選值: ["ddg"]。
+                     預設使用 ddg。
+            max_results: 每個引擎期望回傳的結果數量。
+
         Returns:
-            聚合后的搜尋结果，按引擎分组显示。
+            聚合後的搜尋結果，按引擎分組顯示。
         """
-        engines = engines or ["ddg", "baidu"]
+        engines = engines or ["ddg"]
         aggregated_results = []
         for engine in engines:
             res = self.search(query, engine=engine, max_results=max_results)

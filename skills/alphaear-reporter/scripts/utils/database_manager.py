@@ -117,7 +117,7 @@ class DatabaseManager:
     # --- 新聞資料操作 ---
 
     def save_daily_news(self, news_list: List[Dict]) -> int:
-        """保存熱門新聞，包含發布時間與抓取時間"""
+        """保存熱門新聞，套件含發布時間與抓取時間"""
         cursor = self.conn.cursor()
         count = 0
         crawl_time = datetime.now().isoformat()

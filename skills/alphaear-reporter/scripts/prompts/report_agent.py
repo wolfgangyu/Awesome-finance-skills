@@ -76,7 +76,7 @@ def get_cluster_planner_instructions(signals_text: str, user_query: str = None) 
     {signals_text}
 
     ### 聚類別要求
-    1. **主题聚合**: 將相关性强的訊號归為一组（例如：都涉及"建筑安全法规"或"某产业链上下游"）。
+    1. **主題聚合**: 將相關性強的訊號歸為一組（例如：都涉及「晶片供應中斷」或「某產業鏈上下遊」）。
     2. **叙事逻辑**: 只需要生成主题名称和套件含的訊號 ID。
     3. **控制数量**: 將所有訊號归類別到 3-5 个主要主题中，不要遗漏。
     
@@ -85,9 +85,9 @@ def get_cluster_planner_instructions(signals_text: str, user_query: str = None) 
     {{
         "clusters": [
             {{
-                "theme_title": "主题名称（如：建筑安全法规收紧引发的产业链重构）",
+                "theme_title": "主題名稱（如：晶片供應中斷引發的產業鏈重構）",
                 "signal_ids": [1, 3, 5],
-                "rationale": "这些訊號都指向政府对高层建筑防火标准的政策調整..."
+                "rationale": "這些訊號都指向供應鏈中斷對下游製造商的影響..."
             }},
             ...
         ]
@@ -228,7 +228,7 @@ def get_report_writer_instructions(
             "selected_scenario": "基准",
             "selection_reason": "結合订单能见度与行業景气，基准情景概率最高；短期扰动主要来自估值与市場風險偏好。",
             "scenarios": [
-                {{"name": "乐观", "description": "国产替代与资本开支超预期", "probability": 0.25}},
+                {{"name": "樂觀", "description": "AI 伺服器需求持續擴張", "probability": 0.25}},
                 {{"name": "基准", "description": "订单稳健、利润率小幅波动", "probability": 0.55}},
                 {{"name": "悲观", "description": "需求回落或交付节奏放缓", "probability": 0.20}}
             ]
