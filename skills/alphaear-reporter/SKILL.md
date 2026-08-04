@@ -1,59 +1,114 @@
----
-name: alphaear-reporter
-description: Plan, write, and edit professional financial reports for TW/US markets; generate finance chart configurations. Use when condensing finance analysis into a structured output.
----
 
-# AlphaEar Reporter Skill
 
-## Overview
+## 新增功能：統一設計與多場景支援
 
-This skill provides a structured workflow for generating professional financial reports focused on **Taiwan (TWSE/TPEx)** and **US (yfinance)** markets. It includes planning, writing, editing, and creating visual aids (charts).
+本次更新實現了 alphaear-reporter 的統一設計，支援三種使用場景：
 
-### Shared Schema
+### 1. CLI 介面（供 Hermes Agent 呼叫）
 
-本 skill 內含 vendored 版的 `alphaear_schema`（single source of truth 在 `skills/_shared/alphaear_schema/`）。修改 schema 必須在 `_shared/` 內編輯後跑 `python tools/sync_shared_schema.py`。
+```bash
+# 基本用法
+python -m skills.alphaear-reporter.scripts.report_cli \
+  --signals '[{"title": "台積電營收", "content": "...", "ticker": "2330.TW"}]' \
+  --output line
 
-> 版本戳記: `skills/alphaear-reporter/scripts/alphaear_schema/__vendored__.py`
+# 可用參數
+--signals    輸入訊號的 JSON 字串（必填）
+--market     市場類型 (tw/us/both, 預設: tw)
+--output     輸出格式 (markdown/json/line, 預設: markdown)
+--no-llm     禁用 LLM 驅動邏輯，使用簡化邏輯
+--debug      啟用除錯模式
+```
 
-## Capabilities
+### 2. Python API（供 Polaris 後端 import）
 
-### 1. Generate Structured Reports (Agentic Workflow)
+```python
+from skills.alphaear-reporter.scripts.report_api import ReportAPI
 
-**YOU (the Agent)** are the Report Generator. Use the prompts in `scripts/prompts/` to progressively build the report.
+# 生成 LINE 官方帳號友好報告
+line_report = await ReportAPI.generate_report_for_line(signals, market="tw")
 
-**Workflow:**
-1.  **Cluster Signals**: Read input signals and use the **Cluster Signals Prompt** to group them.
-2.  **Write Sections**: For each cluster, use the **Write Section Prompt** to generate analysis.
-3.  **Assemble**: Use the **Final Assembly Prompt** to compile the report.
+# 生成 LIFF 網頁用 HTML 報告
+liff_report = await ReportAPI.generate_report_for_liff(signals, market="tw")
 
-### 2. Visualization Tools
+# 生成 Hermes Agent 相容格式
+hermes_report = await ReportAPI.generate_report_for_hermes(signals, market="tw")
+```
 
-Use `scripts/visualizer.py` to generate chart configurations if needed manually, though the Writer Prompt usually handles this via `json-chart` blocks.
+### 3. 相容現有 Agentic Workflow（供 Claude Code 使用）
 
-## Market & Language Settings
+```python
+from skills.alphaear-reporter.scripts.report_agent import ReportAgent
 
-### Market Parameter (`market`)
+# 保持現有介面不變
+agent = ReportAgent(db)
+report = await agent.generate_report(signals, market="tw")
+```
 
-The reporter supports three market modes. These affect:
-- Default news sources (CNA for TW, Bloomberg/Reuters for US)
-- Ticker format examples in prompts
-- Stock data source references (TWSE/TPEx vs yfinance)
+### 4. 核心元件：ReportGenerator
 
-| Value | Description | Default News Sources | Ticker Format |
-|:-----|:-----|:-----|:-----|
-| `"tw"` | Taiwan market (default) | `cna_finance`, `cna_tech` | 4-digit (e.g., `2330.TW`) |
-| `"us"` | US market | `bloomberg`, `investing_reuters` | 1-5 letters (e.g., `AAPL`) |
-| `"both"` | Both TW + US | `cna_finance`, `bloomberg` | Both formats |
+所有場景共用同一個核心邏輯實作，支援：
+- **簡化邏輯**（無 LLM）：快速聚類別和報告生成
+- **LLM 驅動邏輯**：深度分析和智能撰寫
+- **統一輸出格式**：Markdown、JSON、LINE 友好格式
+- **市場相容性**：台灣（tw）、美國（us）、台美（both）
 
-### Language Requirement (Humanize-ZH)
+```python
+from skills.alphaear-reporter.scripts.report_generator import ReportGenerator
 
-All report output must follow the **Humanize-ZH** writing standards:
-- **全程使用繁體中文**（禁止簡體中文字元）
-- **中文字與英文/數字之間加半形空格**（如：T+5 預測、AAPL 股價）
-- **保留專業術語的英文和縮寫**（如 TWSE、TPEx、ISQ、K 線）
-- **語氣自然不生硬**（避免 AI 腔調）
-- **數字格式**：金額千分位（NT$ 1,234,567），百分比兩位小數（+3.45%）
+generator = ReportGenerator(db, llm_client=llm_client, market="tw")
+report = await generator.generate_report(signals, use_llm=True)
+```
 
-## Dependencies
+### 5. LLM 抽象介面
 
--   `sqlite3` (built-in)
+新增 `LLMClient` 抽象介面，允許外部注入不同 LLM 後端：
+
+```python
+from skills.alphaear-reporter.scripts.utils.llm.base_client import LLMClient
+
+class CustomLLMClient(LLMClient):
+    async def generate(self, prompt, json_mode=False, temperature=0.7, max_tokens=4096):
+        # 自定義 LLM 實作
+        return "..."
+```
+
+### 6. 輸出格式說明
+
+| 格式 | 用途 | 特點 |
+|------|------|------|
+| `markdown` | 通用報告格式 | 完整 Markdown 格式，包含標題、章節、參考文獻 |
+| `json` | 前端渲染 | 結構化 JSON，便於前端解析和渲染 |
+| `line_friendly` | LINE 官方帳號 | 簡化純文字格式，適合 LINE 訊息限制 |
+
+### 7. 使用範例
+
+**Hermes Agent 呼叫範例**
+```bash
+python -m skills.alphaear-reporter.scripts.report_cli \
+  --signals '[{"title": "台積電營收創新高", "content": "台積電公布 7 月營收創歷史新高...", "ticker": "2330.TW"}]' \
+  --market tw \
+  --output line \
+  --no-llm
+```
+
+**Polaris 後端呼叫範例**
+```python
+from skills.alphaear-reporter.scripts.report_api import ReportAPI
+
+signals = [{"title": "台積電營收", "content": "...", "ticker": "2330.TW"}]
+
+# 發送到 LINE 官方帳號
+line_message = await ReportAPI.generate_report_for_line(signals, market="tw")
+
+# 嵌入 LIFF 網頁
+liff_html = await ReportAPI.generate_report_for_liff(signals, market="tw")
+```
+
+**Claude Code 呼叫範例**
+```python
+from skills.alphaear-reporter.scripts.report_agent import ReportAgent
+
+agent = ReportAgent(db)
+report = await agent.generate_report(signals, market="tw")
+```
