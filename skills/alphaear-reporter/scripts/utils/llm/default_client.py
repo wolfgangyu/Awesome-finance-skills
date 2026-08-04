@@ -7,7 +7,6 @@
 from typing import Optional
 from loguru import logger
 from .base_client import LLMClient
-from .router import ModelRouter
 
 
 class DefaultLLMClient(LLMClient):
@@ -22,7 +21,7 @@ class DefaultLLMClient(LLMClient):
         market: 當前設定的市場類型
     """
 
-    def __init__(self, router: Optional[ModelRouter] = None):
+    def __init__(self, router: Optional["ModelRouter"] = None):
         """
         初始化 DefaultLLMClient
 
@@ -76,7 +75,7 @@ class DefaultLLMClient(LLMClient):
 
         except Exception as e:
             logger.error(f"❌ Failed to generate text: {e}")
-            raise
+            raise LLMGenerationError(f"LLM generation failed: {e}") from e
 
     def set_market(self, market: str) -> None:
         """
@@ -111,10 +110,7 @@ class DefaultLLMClient(LLMClient):
         market_context = {
             "tw": "台灣市場",
             "us": "美國市場",
-            "cn": "中國市場",
-            "hk": "香港市場",
-            "jp": "日本市場",
-            "kr": "韓國市場"
+            "both": "台美市場",
         }
 
         context = market_context.get(self.market, "全球市場")
@@ -133,4 +129,9 @@ class DefaultLLMClient(LLMClient):
         return f"DefaultLLMClient(market='{self.market}')"
 
 
-__all__ = ["DefaultLLMClient"]
+class LLMGenerationError(Exception):
+    """LLM 文本生成失敗時拋出的異常"""
+    pass
+
+
+__all__ = ["DefaultLLMClient", "LLMGenerationError"]
