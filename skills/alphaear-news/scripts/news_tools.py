@@ -8,7 +8,10 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from loguru import logger
-from .database_manager import DatabaseManager
+try:
+    from .database_manager import DatabaseManager
+except ImportError:
+    from database_manager import DatabaseManager  # fallback for direct script execution
 
 
 class RSSFeedSource:
@@ -387,3 +390,23 @@ class PolymarketTools:
             report += "\n"
 
         return report
+
+
+if __name__ == "__main__":
+    from database_manager import DatabaseManager
+    import sys
+    mode = sys.argv[1] if len(sys.argv) > 1 else "all"
+    db = DatabaseManager("data/signal_flux.db")
+
+    if mode == "trends":
+        fetcher = NewsFetcher(db)
+        print(fetcher.get_unified_trends())
+    elif mode == "polymarket":
+        pt = PolymarketTools(db)
+        print(pt.get_market_summary())
+    else:
+        fetcher = NewsFetcher(db)
+        all_news = fetcher.fetch_all_sources(count=15)
+        print(f"共取得 {len(all_news)} 筆新聞")
+        for n in all_news[:5]:
+            print(f"  [{n['source']}] {n['title'][:60]}")
