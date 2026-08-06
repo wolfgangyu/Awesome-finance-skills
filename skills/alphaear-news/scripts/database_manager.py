@@ -11,9 +11,9 @@ class DatabaseManager:
     Reduced version for alphaear-news skill
     DB 統一放在 C:/Users/chimi/Awesome-finance-skills/data/signal_flux.db
     """
-    # 從 script 位置往上推 3 層到 repo 根，portable（Ubuntu / Windows 皆適用）
+    # 本地 DB，與 news 寫入路徑一致（scripts/data/）
     DEFAULT_DB = (
-        Path(__file__).resolve().parents[3]
+        Path(__file__).resolve().parent
         / "data"
         / "signal_flux.db"
     )

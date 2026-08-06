@@ -72,16 +72,24 @@ class KeywordScorer:
         return keywords
 
     def _detect_language(self, text: str) -> str:
-        """Simple language detection based on character set."""
+        """Detect language by character set, giving Japanese priority.
+
+        Japanese text contains both kana (hiragana/katakana) and kanji
+        (CJK ideographs). We check kana FIRST to avoid misclassifying
+        Japanese as Chinese — both scripts share kanji, but only Japanese
+        has kana characters (0x3040-0x30FF).
+        """
         if not text:
             return "en"
 
-        # Check for Traditional Chinese characters
+        # Check for Japanese: kana are unique to Japanese
+        if any(0x3040 <= ord(c) <= 0x30FF for c in text):
+            return "ja"
+
+        # Check for Chinese: CJK without kana
         if any(0x4E00 <= ord(c) <= 0x9FFF for c in text):
             return "zh-TW"
-        # Check for Hiragana/Katakana/Kanji
-        if any(0x3040 <= ord(c) <= 0x30FF or 0x4E00 <= ord(c) <= 0x9FFF for c in text):
-            return "ja"
+
         # Default to English
         return "en"
 
