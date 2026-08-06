@@ -1,8 +1,8 @@
 # 🧠 Awesome Finance Skills
 
-> 將你的 AI Agent 變身為華爾街分析師。
+> 將你的 AI Agent 變身為金融分析師。
 >
-> 一套即插即用的技能套件，為 LLM Agent 注入即時新聞、台股美股行情、情緒分析、邏輯鏈路可視化與市場預測能力。
+> 一套即插即用的**獨立技能套件**，為 LLM Agent 注入即時新聞、台股美股行情、情緒分析、邏輯鏈路可視化與市場預測能力。
 
 [English](#english) | [繁體中文](#中文)
 
@@ -11,19 +11,32 @@
 <a name="english"></a>
 ## 🇬🇧 English
 
+### 🚀 Project Status
+This project was originally forked from [RKiding/AlphaEar](https://github.com/RKiding/AlphaEar), but has since evolved into an independent repository with significant improvements and new features. The fork status has been removed.
+
+Key differences from the original:
+- Added new skills: `alphaear-reporter`, `alphaear-deepear-lite`, `alphaear-logic-visualizer`
+- Removed dependencies: `akshare`, `EastMoneyDirect`, BERT/FinBERT models
+- Improved multi-language sentiment analysis (zh-TW/ja/en)
+- Each skill manages its own SQLite database for better modularity
+
+---
+
 ### What's Inside
 
 | Skill | What It Does |
 |:------|:------------|
 | **alphaear-news** | Fetches financial news from RSS feeds (CNA, Bloomberg, Reuters, NHK) + Polymarket prediction data |
-| **alphaear-stock** | Searches and retrieves stock data — TWSE / TPEx (Taiwan) and US stocks via yfinance |
-| **alphaear-sentiment** | Guides the Agent to analyze financial text sentiment (-1.0 ~ +1.0), no external ML models needed |
-| **alphaear-search** | Web search (Jina / DuckDuckGo) + local RAG over cached news |
+| **alphaear-stock** | Searches and retrieves stock data — TWSE/TPEx (Taiwan) and US stocks via yfinance |
+| **alphaear-sentiment** | Keyword-based sentiment analysis for financial text (-1.0 ~ +1.0), supports zh-TW/ja/en |
+| **alphaear-search** | Web search (Jina/DuckDuckGo) + local RAG over cached news |
 | **alphaear-predictor** | Kronos time-series forecasting with news-aware sentiment adjustments |
-| **alphaear-signal-tracker** | Tracks evolution of investment signals — Strengthen / Weaken / Falsify |
-| **alphaear-reporter** | Generates professional research reports: Plan → Write → Edit → Charts |
+| **alphaear-signal-tracker** | Tracks evolution of investment signals — Strengthen/Weaken/Falsify |
+| **alphaear-reporter** | Generates professional research reports with unified design (CLI/Python API/Agent support) |
 | **alphaear-logic-visualizer** | Converts logic chains into Draw.io XML diagrams |
-| **alphaear-composer** | Assembles raw data into `latest.json` — the missing link that turns independent skills into a pipeline |
+| **alphaear-deepear-lite** | Lightweight DeepEar signal fetcher (local or remote) |
+
+---
 
 ### How to Use
 
@@ -42,10 +55,13 @@ git clone https://github.com/wolfgangyu/Awesome-finance-skills.git
 cp -r Awesome-finance-skills/skills/* ~/.claude/skills/
 ```
 
-Then ask your Agent things like:
+Then ask your Agent:
 
 > "Analyze how the gold crash affects US and Taiwan stocks"
 > "Search recent Apple news and tell me the sentiment"
+> "Generate a research report about TSMC's latest earnings"
+
+---
 
 ### Architecture
 
@@ -56,33 +72,35 @@ Skills are designed to be **independent** — each one can be installed separate
 Each skill works on its own:
 
 ```
-alphaear-stock  →  stock prices & tickers
-alphaear-news   →  aggregated financial news
+alphaear-stock  →  stock prices & tickers (TWSE/TPEx/yfinance)
+alphaear-news   →  aggregated financial news (10+ sources)
 alphaear-search →  web search + local RAG
-alphaear-sentiment →  sentiment scores for news
-alphaear-predictor →  Kronos forecasts (uses news + stock data)
-alphaear-reporter →  generates research reports (uses everything above)
-alphaear-deepear-lite →  fetches signals (local or remote)
+alphaear-sentiment →  text sentiment (-1.0 ~ +1.0)
+alphaear-predictor →  Kronos time-series forecasting
+alphaear-signal-tracker →  InvestmentSignal lifecycle (strengthen/weaken/falsify)
+alphaear-reporter →  research reports (composes all above)
+alphaear-logic-visualizer →  Draw.io XML diagrams
+alphaear-deepear-lite →  lightweight DeepEar signal fetcher
 ```
 
-#### Pipeline Mode (Composer)
+#### Pipeline Mode
 
-Install all data-collecting skills and run `alphaear-composer` to assemble them into a unified signal report:
+Install all data-collecting skills and use them together:
 
 ```
-資料層 ──▶ 組裝層 ──▶ 消費層
+資料層 ──▶ 分析層 ──▶ 報告層
 
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ alphaear-news│  │alphaear-     │  │ alphaear-     │
-│              │  │search        │  │stock          │
-│ RSS 聚合     │  │ 網路搜尋     │  │ 股價資料      │
-│ 10+ 來源     │  │ Baidu/Google │  │ TWSE/TPEx/    │
-│              │  │              │  │ yfinance      │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+┌──────────────┐  ┌──────────────┐  ┌─────────────────┐
+│ alphaear-news│  │alphaear-     │  │ alphaear-        │
+│              │  │search        │  │stock             │
+│ RSS 聚合     │  │ 網路搜尋     │  │ 股價資料         │
+│ 10+ 來源     │  │ Baidu/Google │  │ TWSE/TPEx/       │
+│              │  │              │  │ yfinance         │
+└──────┬───────┘  └──────┬───────┘  └──────┬─────────┘
        │                 │                 │
        ▼                 ▼                 ▼
 ┌─────────────────────────────────────────────────┐
-│         signal_flux.db (共享 SQLite)             │
+│         signal_flux.db (SQLite)                 │
 │                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌────────┐  │
 │  │ daily_news  │  │search_detail│  │stock_  │  │
@@ -95,92 +113,60 @@ Install all data-collecting skills and run `alphaear-composer` to assemble them 
                          │
                          ▼
 ┌─────────────────────────────────────────────────┐
-│       alphaear-composer (組裝廠)                 │
+│               alphaear-reporter                 │
 │                                                 │
-│  DatabaseMgr ──▶ SignalFormation ──▶ Serializer │
-│       │              │                            │
-│       │         ISQ Scoring                      │
-│       │         sentiment  (-1 ~ +1)             │
-│       │         confidence   (0 ~ 1)             │
-│       │         intensity    (1 ~ 5)             │
-│       │         gap          (0 ~ 1)             │
-│       │         timeliness   (0 ~ 1)             │
-└──────────────────┬───────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────┐
-│              data/latest.json                    │
-│                                                  │
-│  {                                               │
-│    "generated_at": "...",                        │
-│    "signals": [                                  │
-│      {                                           │
-│        "signal_id": "NVDA",                      │
-│        "title": "NVDA reaches ATH",              │
-│        "sentiment_score": 0.5,                   │
-│        "confidence": 0.61,                       │
-│        "intensity": 3,                           │
-│        "sources": [...],                         │
-│        ...                                       │
-│      }                                           │
-│    ],                                            │
-│    "charts": {}                                  │
-│  }                                               │
+│  Generates professional research reports        │
+│  with sentiment analysis and market insights    │
 └────────────────────────┬────────────────────────┘
                          │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-   ┌──────────────────┐   ┌──────────────────────┐
-   │ alphaear-deepear-│   │  你的 Vercel 服務     │
-   │ lite (--local)   │   │  (可選：自建)          │
-   │                  │   │                       │
-   │ 讀本機 latest.json│   │ 部署 latest.json 到   │
-   │                  │   │  deepear.vercel.app/  │
-   └──────────────────┘   └──────────────────────┘
+                         ▼
+┌─────────────────────────────────────────────────┐
+│               Output Formats                    │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────┐  │
+│  │ Markdown    │  │ JSON       │  │ LINE    │  │
+│  │             │  │            │  │ Friendly│  │
+│  └─────────────┘  └─────────────┘  └─────────┘  │
+└─────────────────────────────────────────────────┘
 ```
 
-**使用方式：**
-
-```bash
-# 1. 先收集資料（需要 alphaear-news 等資料收集 skill）
-python3 skills/alphaear-news/scripts/news_tools.py  # 抓新聞進 DB
-
-# 2. 組裝成 latest.json
-python3 skills/alphaear-composer/scripts/composer.py --days 1 --market both
-
-# 3. 讀取並格式化輸出
-python3 skills/alphaear-composer/scripts/composer.py --read
-# 或
-python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py --local
-```
-
-**關鍵設計：**
-- composer 是**讀取層**，不修改任何現有 skill 的資料收集邏輯
-- `latest.json` 格式跟 DeepEar Vercel 服務**完全一致**，可以互換
-- 不需要 LLM 也能跑（heuristic 模式），要更高品質可擴充 LLM 模式
-
-### Related Projects
-
-- **[DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)** — Full autonomous financial analysis framework
+**Key Features:**
+- **Multi-market support**: Taiwan (TWSE/TPEx) and US stocks
+- **Multi-language support**: zh-TW, ja, en
+- **Multi-format output**: Markdown, JSON, LINE-friendly text
+- **LLM abstraction**: Supports Anthropic, OpenAI, Gemini
+- **No heavy ML models**: Uses keyword-based sentiment analysis
 
 ---
 
 <a name="中文"></a>
 ## 🇹🇼 繁體中文
 
+### 🚀 專案現況
+本專案最初 Fork 自 [RKiding/AlphaEar](https://github.com/RKiding/AlphaEar)，但已經獨立發展並移除 Fork 狀態。目前專案新增了多個技能（如 `alphaear-reporter`、`alphaear-deepear-lite`），並移除了 `akshare` 和 `EastMoneyDirect` 等依賴。
+
+主要差異：
+- 新增技能：`alphaear-reporter`、`alphaear-deepear-lite`、`alphaear-logic-visualizer`
+- 移除依賴：`akshare`、`EastMoneyDirect`、BERT/FinBERT 模型
+- 改進多語言情感分析（繁體中文/日文/英文）
+- 每個技能管理自己的 SQLite 資料庫，提升模組化
+
+---
+
 ### 技能清單
 
 | 技能 | 功能說明 |
 |:------|:---------|
 | **alphaear-news** | 從 RSS 來源抓取財經新聞（中央社、Bloomberg、Reuters、NHK）+ Polymarket 預測市場 |
-| **alphaear-stock** | 搜尋台股（TWSE/TPEx）與美股行情，支援代碼搜尋與歷史 OHLCV |
-| **alphaear-sentiment** | 引導 Agent 分析金融文本情緒（-1.0 ~ +1.0），無需額外安裝機器學習模型 |
-| **alphaear-search** | 網路搜尋（Jina / DuckDuckGo）+ 本機 RAG 檢索 |
+| **alphaear-stock** | 搜尋台股（TWSE/TPEx）與美股行情，支援代碼搜尋與歷史 K 線 |
+| **alphaear-sentiment** | 關鍵字情緒分析（-1.0 ~ +1.0），支援繁體中文/日文/英文 |
+| **alphaear-search** | 網路搜尋（Jina/DuckDuckGo）+ 本機 RAG 檢索 |
 | **alphaear-predictor** | Kronos 時序預測模型，結合新聞情緒動態調整 |
-| **alphaear-signal-tracker** | 追蹤投資訊號演化：強化 / 弱化 / 證偽 |
-| **alphaear-reporter** | 生成專業研報：規劃 → 撰寫 → 編輯 → 圖表 |
+| **alphaear-signal-tracker** | 追蹤投資訊號演化：強化/弱化/證偽 |
+| **alphaear-reporter** | 生成專業研報，支援 CLI/Python API/Agent 三種模式 |
 | **alphaear-logic-visualizer** | 將邏輯鏈轉為 Draw.io XML 圖表 |
-| **alphaear-composer** | 將分散的資料技能組裝成 `latest.json` — 讓獨立 skills 變成完整 pipeline |
+| **alphaear-deepear-lite** | 輕量化 DeepEar 訊號抓取工具（本機或遠端） |
+
+---
 
 ### 如何使用
 
@@ -202,7 +188,10 @@ cp -r Awesome-finance-skills/skills/* ~/.claude/skills/
 接著就可以問你的 Agent：
 
 > "分析貴金屬跳水對美國與台灣股市的影響"
-> "搜尋蘋果最新新聞並告訴我情緒是正面還是負面"
+> "搜尋蘋果最新新聞並告訴我情緒分數"
+> "生成一份台積電最新財報的研究報告"
+
+---
 
 ### 架構
 
@@ -210,36 +199,38 @@ cp -r Awesome-finance-skills/skills/* ~/.claude/skills/
 
 #### 獨立使用
 
-每個 skill 都可以單獨運作：
+每個技能都可以單獨運作：
 
 ```
-alphaear-stock  →  個股行情
-alphaear-news   →  聚合財經新聞
+alphaear-stock  →  個股行情（台股/美股）
+alphaear-news   →  聚合財經新聞（10+來源）
 alphaear-search →  網路搜尋 + 本機 RAG
-alphaear-sentiment →  新聞情緒分析
-alphaear-predictor →  Kronos 預測（使用新聞 + 行情資料）
+alphaear-sentiment →  新聞情緒分析（-1.0 ~ +1.0）
+alphaear-predictor →  Kronos 預測模型
+alphaear-signal-tracker →  投資訊號追蹤（強化/弱化/證偽）
 alphaear-reporter →  生成研報（整合以上所有技能）
-alphaear-deepear-lite →  取得訊號（本機或遠端）
+alphaear-logic-visualizer →  邏輯鏈可視化（Draw.io）
+alphaear-deepear-lite →  輕量化 DeepEar 訊號抓取
 ```
 
-#### 串聯模式（Composer）
+#### 串聯模式
 
-安裝所有資料收集技能後，執行 `alphaear-composer` 即可將它們組裝成統一的訊號報告：
+安裝多個技能後，可以組合使用：
 
 ```
-資料層 ──▶ 組裝層 ──▶ 消費層
+資料層 ──▶ 分析層 ──▶ 報告層
 
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ alphaear-news│  │alphaear-     │  │ alphaear-     │
-│              │  │search        │  │stock          │
-│ RSS 聚合     │  │ 網路搜尋     │  │ 股價資料      │
-│ 10+ 來源     │  │ Baidu/Google │  │ TWSE/TPEx/    │
-│              │  │              │  │ yfinance      │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+┌──────────────┐  ┌──────────────┐  ┌─────────────────┐
+│ alphaear-news│  │alphaear-     │  │ alphaear-        │
+│              │  │search        │  │stock             │
+│ RSS 聚合     │  │ 網路搜尋     │  │ 股價資料         │
+│ 10+ 來源     │  │ Baidu/Google │  │ TWSE/TPEx/       │
+│              │  │              │  │ yfinance         │
+└──────┬───────┘  └──────┬───────┘  └──────┬─────────┘
        │                 │                 │
        ▼                 ▼                 ▼
 ┌─────────────────────────────────────────────────┐
-│         signal_flux.db (共享 SQLite)             │
+│         signal_flux.db (SQLite)                 │
 │                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌────────┐  │
 │  │ daily_news  │  │search_detail│  │stock_  │  │
@@ -252,71 +243,24 @@ alphaear-deepear-lite →  取得訊號（本機或遠端）
                          │
                          ▼
 ┌─────────────────────────────────────────────────┐
-│       alphaear-composer (組裝廠)                 │
+│               alphaear-reporter                 │
 │                                                 │
-│  DatabaseMgr ──▶ SignalFormation ──▶ Serializer │
-│       │              │                            │
-│       │         ISQ Scoring                      │
-│       │         sentiment  (-1 ~ +1)             │
-│       │         confidence   (0 ~ 1)             │
-│       │         intensity    (1 ~ 5)             │
-│       │         gap          (0 ~ 1)             │
-│       │         timeliness   (0 ~ 1)             │
-└──────────────────┬───────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────┐
-│              data/latest.json                    │
-│                                                  │
-│  {                                               │
-│    "generated_at": "...",                        │
-│    "signals": [                                  │
-│      {                                           │
-│        "signal_id": "NVDA",                      │
-│        "title": "NVDA reaches ATH",              │
-│        "sentiment_score": 0.5,                   │
-│        "confidence": 0.61,                       │
-│        "intensity": 3,                           │
-│        "sources": [...],                         │
-│        ...                                       │
-│      }                                           │
-│    ],                                            │
-│    "charts": {}                                  │
-│  }                                               │
+│  生成專業研報，包含情緒分析與市場洞察          │
 └────────────────────────┬────────────────────────┘
                          │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-   ┌──────────────────┐   ┌──────────────────────┐
-   │ alphaear-deepear-│   │  你的 Vercel 服務     │
-   │ lite (--local)   │   │  (可選：自建)          │
-   │                  │   │                       │
-   │ 讀本機 latest.json│   │ 部署 latest.json 到   │
-   │                  │   │  deepear.vercel.app/  │
-   └──────────────────┘   └──────────────────────┘
+                         ▼
+┌─────────────────────────────────────────────────┐
+│               輸出格式                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────┐  │
+│  │ Markdown    │  │ JSON       │  │ LINE    │  │
+│  │             │  │            │  │ 友好格式│  │
+│  └─────────────┘  └─────────────┘  └─────────┘  │
+└─────────────────────────────────────────────────┘
 ```
 
-**使用方式：**
-
-```bash
-# 1. 先收集資料（需要 alphaear-news 等資料收集 skill）
-python3 skills/alphaear-news/scripts/news_tools.py  # 抓新聞進 DB
-
-# 2. 組裝成 latest.json
-python3 skills/alphaear-composer/scripts/composer.py --days 1 --market both
-
-# 3. 讀取並格式化輸出
-python3 skills/alphaear-composer/scripts/composer.py --read
-# 或
-python3 skills/alphaear-deepear-lite/scripts/deepear_lite.py --local
-```
-
-**關鍵設計：**
-- composer 是**讀取層**，不修改任何現有 skill 的資料收集邏輯
-- `latest.json` 格式跟 DeepEar Vercel 服務**完全一致**，可以互換
-- 不需要 LLM 也能跑（heuristic 模式），要更高品質可擴充 LLM 模式
-
-### 相關專案
-
-- **[DeepEar (AlphaEar)](https://github.com/RKiding/AlphaEar)** — 完整的自動化金融分析框架
-
+**關鍵特色：**
+- **多市場支援**：台灣（TWSE/TPEx）與美國股市
+- **多語言支援**：繁體中文、日文、英文
+- **多格式輸出**：Markdown、JSON、LINE 友好格式
+- **LLM 抽象介面**：支援 Anthropic、OpenAI、Gemini
+- **無重量級模型**：使用關鍵字情緒分析，無需額外安裝 ML 模型
